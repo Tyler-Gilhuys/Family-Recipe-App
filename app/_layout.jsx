@@ -27,6 +27,7 @@ const RootLayout = () => {
           options={{ title: "Recipe Details" }}
         />
         <Stack.Screen name="addRecipe" options={{ title: "Add Recipe" }} />
+        <Stack.Screen name="TestFirebase" options={{ headerShown: false }} />
       </Stack>
     </>
   );
