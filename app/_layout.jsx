@@ -23,11 +23,15 @@ const RootLayout = () => {
         />
         <Stack.Screen name="recipe/index" options={{ title: "Recipe" }} />
         <Stack.Screen
-          name="recipe/[id]"
+          name="recipe/details/[id]"
           options={{ title: "Recipe Details" }}
         />
+        <Stack.Screen
+          name="recipe/[category]"
+          options={{ title: "Category" }}
+        />
         <Stack.Screen name="addRecipe" options={{ title: "Add Recipe" }} />
-        <Stack.Screen name="TestFirebase" options={{ headerShown: false }} />
+        {/* <Stack.Screen name="TestFirebase" options={{ headerShown: false }} /> */}
       </Stack>
     </>
   );

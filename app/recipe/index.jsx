@@ -9,17 +9,20 @@ import {
   Pressable,
 } from "react-native";
 import { Link } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../../constants/Colors";
 import ThemedViews from "../../components/ThemedViews";
 import React, { forwardRef } from "react";
+import { useEffect, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebaseConfig";
 
 const { width: windowWidth } = Dimensions.get("window");
 
-const Slide = forwardRef(({ data, theme, ...props }, ref) => (
+const Slide = forwardRef(({ data, theme, onPress, ...props }, ref) => (
   <Pressable
     ref={ref}
     {...props}
+    onPress={onPress}
     style={({ pressed }) => [
       styles.slide,
       {
@@ -38,111 +41,59 @@ const Slide = forwardRef(({ data, theme, ...props }, ref) => (
 const Recipe = () => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const [allRecipes, setAllRecipes] = useState([]);
 
-  const everydayRecipes = [
-    {
-      id: "1",
-      name: "Grilled Chicken",
-      image: require("../../assets/grilled-chicken.jpeg"), // Update path
-    },
-    {
-      id: "2",
-      name: "Pasta Primavera",
-      image: require("../../assets/pasta-primavera.jpeg"),
-    },
-    // Add more everyday recipes here
-  ];
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "recipes"));
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().title,
+          image: { uri: doc.data().imageUrl },
+          categories: doc.data().categories || [],
+        }));
+        setAllRecipes(data);
+      } catch (error) {
+        console.error("Error fetching recipes:", error);
+      }
+    };
 
-  const fallRecipes = [
-    {
-      id: "3",
-      name: "Pumpkin Soup",
-      image: require("../../assets/pumpkin-soup.jpeg"),
-    },
-    {
-      id: "4",
-      name: "Apple Crisp",
-      image: require("../../assets/apple-crisp.jpeg"),
-    },
-    // Add more fall recipes here
-  ];
-
-  const christmasRecipes = [
-    {
-      id: "5",
-      name: "Gingerbread Cookies",
-      image: require("../../assets/gingerbread-cookies.jpeg"),
-    },
-    // Add more Christmas recipes here
-  ];
-
-  const thanksgivingRecipes = [
-    {
-      id: "6",
-      name: "Roast Turkey",
-      image: require("../../assets/roast-turkey.jpeg"),
-    },
-    {
-      id: "7",
-      name: "Mashed Potatoes",
-      image: require("../../assets/mashed-potatoes.jpeg"),
-    },
-    // Add more Thanksgiving recipes here
-  ];
-
-  const sidesRecipes = [
-    {
-      id: "8",
-      name: "Garlic Bread",
-      image: require("../../assets/garlic-bread.jpeg"),
-    },
-    // Add more sides here
-  ];
-
-  const dessertsRecipes = [
-    {
-      id: "9",
-      name: "Chocolate Cake",
-      image: require("../../assets/chocolate-cake.jpeg"),
-    },
-    // Add more desserts here
-  ];
-
-  const beveragesRecipes = [
-    {
-      id: "10",
-      name: "Hot Cocoa",
-      image: require("../../assets/hot-cocoa.jpeg"),
-    },
-    // Add more beverages here
-  ];
-
-  // Mapping object: Keys match category names, values are the recipe arrays
-  const recipeMapping = {
-    "Everday Dinners": everydayRecipes,
-    "Fall Dinners": fallRecipes,
-    "Christmas Snack Night": christmasRecipes,
-    "Thanksgiving Dinners": thanksgivingRecipes,
-    Sides: sidesRecipes,
-    Desserts: dessertsRecipes,
-    Beverages: beveragesRecipes,
-    // Add new categories here, e.g., 'Summer Salads': summerRecipes,
-  };
+    fetchRecipes();
+  }, []);
 
   // Categories data (now uses the mapping for dynamic assignment)
   const categories = [
-    { key: "Everday Dinners" },
-    { key: "Fall Dinners" },
-    { key: "Christmas Snack Night" },
-    { key: "Thanksgiving Dinners" },
+    { key: "Breakfast" },
+    { key: "Dinner" },
+    { key: "Christmas" },
+    { key: "Thanksgiving" },
     { key: "Sides" },
-    { key: "Desserts" },
+    { key: "Dessert" },
     { key: "Beverages" },
-    // Add new categories here, e.g., { key: 'Summer Salads' },
-  ].map((category) => ({
-    ...category,
-    recipes: recipeMapping[category.key] || [], // Dynamically assign recipes or empty array if not found
-  }));
+  ].map((category) => {
+    const filtered = allRecipes.filter((recipe) =>
+      recipe.categories?.includes(category.key)
+    );
+
+    const preview = filtered.slice(0, 3);
+
+    return {
+      ...category,
+      recipes: [
+        ...preview,
+        ...(filtered.length > 3
+          ? [
+              {
+                id: `view-all-${category.key}`,
+                type: "viewAll",
+                category: category.key,
+              },
+            ]
+          : []),
+      ],
+    };
+  });
 
   return (
     // <SafeAreaView style={[styles.container, { backgroundColor: theme.background}]}>
@@ -155,21 +106,45 @@ const Recipe = () => {
               {item.key}
             </Text>
             <FlatList
-              data={item.recipes} // Use the recipes for this category
-              renderItem={({ item: recipe }) => (
-                <Link href={`/recipe/${recipe.id}`} asChild>
-                  <Slide data={recipe} theme={theme} />
-                </Link>
-              )}
+              data={item.recipes}
+              renderItem={({ item: recipe }) => {
+                // View All card
+                if (recipe.type === "viewAll") {
+                  return (
+                    <Link href={`/recipe/${recipe.category}`} asChild>
+                      <Pressable style={[styles.slide, styles.viewAllCard]}>
+                        <Text style={styles.viewAllText}>View All</Text>
+                      </Pressable>
+                    </Link>
+                  );
+                }
+
+                // Normal recipe card
+                return (
+                  <Link href={`/recipe/details/${recipe.id}`} asChild>
+                    <Slide
+                      data={recipe}
+                      theme={theme}
+                      onPress={() =>
+                        console.log(
+                          "Pressed item:",
+                          recipe.type ?? "recipe",
+                          recipe.name ?? recipe.id
+                        )
+                      }
+                    />
+                  </Link>
+                );
+              }}
               keyExtractor={(recipe) => recipe.id}
               horizontal
-              pagingEnabled // Snaps to the next item
+              pagingEnabled
               showsHorizontalScrollIndicator={false}
               style={styles.carousel}
               contentContainerStyle={[
                 styles.carouselContainer,
                 { backgroundColor: theme.background || "#f5f5f5" },
-              ]} // Adds spacing
+              ]}
             />
           </View>
         )}
@@ -228,5 +203,17 @@ const styles = StyleSheet.create({
   categoryTitle: {
     padding: 10,
     fontSize: 15,
+  },
+  viewAllCard: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#222",
+  },
+
+  viewAllText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    alignItems: "center",
   },
 });
