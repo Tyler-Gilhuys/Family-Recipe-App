@@ -4,22 +4,32 @@ export const Colors = {
 
     dark: {
         text: "#d4d4d4",
-        title: "#fff",
+        title: "#111017",
+        recipeTitle: "#252231",
         background: "#252231",
-        navBackground: "#201e2b",
+        navBackground: "#e0dfe8",
         iconColor: "#9591a5",
         iconColorFocused: "#fff",
-        uiBackground: "#2f2b3d",
+        uiBackground: "#252231",
+        numericalBackground: "#252231",
+        numericalText: "#fff",
+        addRecipeBackground: "#e0dfe8",
+        addRecipeText: "#fff",
     },
 
     light: {
-        text: "#625f72",
-        title: "#201e2b",
+        text: "#111017",
+        title: "#d4d4d4",
+        recipeTitle: "#fff",
         background: "#e0dfe8",
-        navBackground: "#e8e7ef",
+        navBackground: "#252231",
         iconColor: "#686477",
         iconColorFocused: "#201e2b",
         uiBackground: "#d6d5e1",
+        numericalBackground: "#e0dfe8",
+        numericalText: "#252231",
+        addRecipeBackground: "#e0dfe8",
+        addRecipeText: "#252231",
     },
 
 }
