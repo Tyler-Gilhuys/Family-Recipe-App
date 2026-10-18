@@ -190,7 +190,7 @@ const AddRecipe = () => {
       )}
 
       <Text style={[styles.label, { color: theme.text }]}>
-        Recipe Name
+        Recipe Name *
       </Text>
       <TextInput
         placeholder="e.g. Grandma's Chicken and Rice"
@@ -210,7 +210,7 @@ const AddRecipe = () => {
       />
 
       <Text style={[styles.label, { color: theme.text }]}>
-        Ingredients
+        Ingredients *
       </Text>
       <TextInput
         placeholder={"Enter one ingredient per line, or separate with commas or semicolons"}
@@ -231,7 +231,7 @@ const AddRecipe = () => {
       />
 
       <Text style={[styles.label, { color: theme.text }]}>
-        Preparation Steps
+        Preparation Steps *
       </Text>
       <TextInput
         placeholder="Enter each preparation step on a new line"
@@ -273,7 +273,7 @@ const AddRecipe = () => {
       />
 
       <Text style={[styles.label, { color: theme.text }]}>
-        Categories
+        Categories *
       </Text>
       <Text style={[styles.helperText, { color: theme.text }]}>
         Select all categories that apply to this recipe.

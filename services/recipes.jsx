@@ -70,3 +70,24 @@ export async function deleteRecipe(recipeId) {
   }
 }
 
+export async function getComments(recipeId) {
+  return pb.collection("recipe_comments").getFullList({
+    filter: pb.filter("recipe = {:id}", { id: recipeId }),
+    sort: "created",
+    expand: "author",
+    requestKey: null,
+  });
+}
+
+export async function addComment(recipeId, text) {
+  return pb.collection("recipe_comments").create({
+    recipe: recipeId,
+    author: pb.authStore.record.id,
+    text: text.trim(),
+  });
+}
+
+export async function deleteComment(commentId) {
+  return pb.collection("recipe_comments").delete(commentId);
+}
+

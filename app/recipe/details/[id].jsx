@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Pressable,
   Alert,
+  TextInput,
 } from "react-native";
 import {
   useLocalSearchParams,
@@ -18,7 +19,8 @@ import {
 import pb from "../../../pocketbaseConfig";
 import { useAppTheme } from "../../../components/ThemedViews";
 import { Colors } from "../../../constants/Colors";
-import { deleteRecipe } from "../../../services/recipes";
+import { deleteRecipe, getComments, addComment, deleteComment } from "../../../services/recipes";
+import { showMessage, describeError } from "../../../utils/showMessage";
 
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams();
@@ -33,6 +35,9 @@ export default function RecipeDetails() {
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [posting, setPosting] = useState(false);
 
   const recipeId = Array.isArray(id) ? id[0] : id;
 
@@ -71,7 +76,9 @@ export default function RecipeDetails() {
             return;
           }
 
-          const record = await pb.collection("recipes").getOne(recipeId);
+          const record = await pb.collection("recipes").getOne(recipeId, {
+            expand: "author",
+          });
 
           if (active) setRecipe(record);
         } catch (error) {
@@ -83,6 +90,18 @@ export default function RecipeDetails() {
       };
 
       fetchRecipe();
+
+      const loadComments = async () => {
+        try {
+          if (!recipeId || !pb.authStore.isValid) return;
+          const list = await getComments(recipeId);
+          if (active) setComments(list);
+        } catch (error) {
+          console.error("Error loading comments:", error);
+        }
+      };
+
+      loadComments();
 
       return () => {
         active = false;
@@ -140,6 +159,30 @@ export default function RecipeDetails() {
       ]
     );
   };
+
+  async function handleAddComment() {
+    if (!newComment.trim()) return;
+
+    try {
+      setPosting(true);
+      await addComment(recipeId, newComment);
+      setNewComment("");
+      setComments(await getComments(recipeId));
+    } catch (error) {
+      showMessage("Could not post comment", describeError(error));
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function handleDeleteComment(commentId) {
+    try {
+      await deleteComment(commentId);
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    } catch (error) {
+      showMessage("Could not delete comment", describeError(error));
+    }
+  }
 
   if (loading) {
     return (
@@ -224,6 +267,10 @@ export default function RecipeDetails() {
             {recipe.title}
           </Text>
 
+          <Text style={{ color: theme.text, textAlign: "center", marginTop: -12, marginBottom: 20 }}>
+            By {recipe.expand?.author?.name || "Unknown Author"}
+          </Text>
+
           {recipe.comments ? (
             <View
               style={[
@@ -235,7 +282,7 @@ export default function RecipeDetails() {
               ]}
             >
               <Text style={[styles.sectionTitle, { color: theme.recipeTitle }]}>
-                Comments
+                Author Comments
               </Text>
 
               <Text style={[styles.description, { color: cardText }]}>
@@ -303,6 +350,77 @@ export default function RecipeDetails() {
               ))}
             </View>
           )}
+
+          <View
+            style={[
+              styles.sectionCard,
+              { backgroundColor: cardBackground, borderColor: cardBorder },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: theme.recipeTitle }]}>
+              Suggestions & Tweaks
+            </Text>
+
+            {comments.length === 0 && (
+              <Text style={[styles.bodyText, { color: cardText, marginBottom: 12 }]}>
+                No suggestions yet. Be the first to add one!
+              </Text>
+            )}
+
+            {comments.map((c) => {
+              const canDelete =
+                c.author === pb.authStore.record?.id || isAuthor;
+
+              return (
+                <View key={c.id} style={{ marginBottom: 16 }}>
+                  <Text style={{ color: cardText, fontWeight: "bold", marginBottom: 4 }}>
+                    {c.expand?.author?.name || "Family member"}
+                  </Text>
+                  <Text style={[styles.bodyText, { color: cardText }]}>{c.text}</Text>
+
+                  {canDelete && (
+                    <Pressable onPress={() => handleDeleteComment(c.id)}>
+                      <Text style={{ color: cardText, opacity: 0.7, marginTop: 4, fontSize: 13 }}>
+                        Delete
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+              );
+            })}
+
+            <TextInput
+              value={newComment}
+              onChangeText={setNewComment}
+              placeholder="Suggest a tweak or improvement..."
+              placeholderTextColor="#888"
+              multiline
+              maxLength={1000}
+              editable={!posting}
+              style={{
+                borderWidth: 1,
+                borderColor: cardBorder,
+                borderRadius: 10,
+                padding: 12,
+                minHeight: 70,
+                color: cardText,
+                marginBottom: 10,
+              }}
+            />
+
+            <Pressable
+              onPress={handleAddComment}
+              disabled={posting}
+              style={({ pressed }) => [
+                styles.actionButton,
+                { backgroundColor: theme.background, opacity: pressed || posting ? 0.7 : 1 },
+              ]}
+            >
+              <Text style={[styles.actionButtonText, { color: theme.text }]}>
+                {posting ? "Posting..." : "Post Suggestion"}
+              </Text>
+            </Pressable>
+          </View>
 
           {isAuthor && (
             <View style={styles.actions}>
@@ -473,10 +591,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#6d0216",
   },
   actionButtonText: {
-    color: "#ffffff",
     fontSize: 15,
     fontWeight: "bold",
     textAlign: "center",
+    color: "#d4d4d4",
   },
   secondaryButton: {
     paddingHorizontal: 18,
