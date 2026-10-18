@@ -7,9 +7,9 @@ import {
   Pressable,
   TextInput,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import { useAppTheme } from "../../components/ThemedViews";
-import React, { forwardRef, useEffect, useState } from "react";
+import React, { forwardRef, useCallback, useState } from "react";
 import pb from "../../pocketbaseConfig";
 import { Colors } from "../../constants/Colors";
 import { useRecipeSearch } from "../../contexts/RecipeSearchContext";
@@ -85,38 +85,40 @@ const Recipe = () => {
 
   const imageWidth = Math.min(cardWidth - 32, 180);
 
-  useEffect(() => {
-    const fetchRecipes = async () => {
-      try {
-        if (!pb.authStore.isValid) {
-          console.log("Please log in to view recipes.");
-          setAllRecipes([]);
-          return;
+  useFocusEffect(
+    useCallback(() => {
+      const fetchRecipes = async () => {
+        try {
+          if (!pb.authStore.isValid) {
+            console.log("Please log in to view recipes.");
+            setAllRecipes([]);
+            return;
+          }
+
+          const records = await pb.collection("recipes").getFullList({
+            sort: "-created",
+          });
+
+          const data = records.map((record) => ({
+            id: record.id,
+            name: record.title,
+            image: record.image
+              ? {
+                uri: pb.files.getURL(record, record.image),
+              }
+              : null,
+            categories: record.categories || [],
+          }));
+
+          setAllRecipes(data);
+        } catch (error) {
+          console.error("Error fetching PocketBase recipes:", error);
         }
+      };
 
-        const records = await pb.collection("recipes").getFullList({
-          sort: "-created",
-        });
-
-        const data = records.map((record) => ({
-          id: record.id,
-          name: record.title,
-          image: record.image
-            ? {
-              uri: pb.files.getURL(record, record.image),
-            }
-            : null,
-          categories: record.categories || [],
-        }));
-
-        setAllRecipes(data);
-      } catch (error) {
-        console.error("Error fetching PocketBase recipes:", error);
-      }
-    };
-
-    fetchRecipes();
-  }, []);
+      fetchRecipes();
+    }, [])
+  );
 
   const query = searchQuery.trim().toLowerCase();
   const isSearching = query.length > 0;

@@ -17,6 +17,7 @@ import { Colors } from "../constants/Colors";
 import { pickImage } from "../utils/ImagePicker";
 import { createRecipe } from "../services/recipes";
 import { uploadRecipeImage } from "../services/recipeImages";
+import { showMessage, describeError } from "../utils/showMessage";
 
 const categoriesList = [
   "Breakfast",
@@ -69,7 +70,7 @@ const AddRecipe = () => {
       if (uri) setImageUri(uri);
     } catch (error) {
       console.error("Image picker error:", error);
-      Alert.alert("Error", "Unable to select an image.");
+      showMessage("Error", "Unable to select an image.");
     }
   };
 
@@ -93,8 +94,8 @@ const AddRecipe = () => {
   const handleSubmit = async () => {
     if (loading) return;
 
-    if (!recipeName.trim()) {
-      Alert.alert("Missing Recipe Name", "Please enter a recipe name.");
+    if (!recipeName.trim() || !ingredients.trim() || !steps.trim() || !categoriesList.some((cat) => selectedCategories.includes(cat))) {
+      showMessage("Missing Information", "Please fill in all required fields and select at least one category.");
       return;
     }
 
@@ -118,7 +119,7 @@ const AddRecipe = () => {
         await uploadRecipeImage(imageUri, recipeId);
       }
 
-      Alert.alert("Success", "Recipe saved successfully!");
+      showMessage("Success", "Recipe saved successfully!");
 
       setRecipeName("");
       setIngredients("");
@@ -130,7 +131,7 @@ const AddRecipe = () => {
       router.push("/");
     } catch (error) {
       console.error("handleSubmit error:", error);
-      Alert.alert("Error", error?.message || "Unable to save this recipe.");
+      describeError("Error", error?.message || "Unable to save this recipe.");
     } finally {
       setLoading(false);
     }

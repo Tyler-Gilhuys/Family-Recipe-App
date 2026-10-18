@@ -7,8 +7,14 @@ export async function login(email, password) {
       password
     );
 
-    console.log("PocketBase login successful:", authData.record.id);
+    if (!authData.record.verified) {
+      pb.authStore.clear();
+      const err = new Error("Please verify your email before logging in.");
+      err.code = "EMAIL_NOT_VERIFIED";
+      throw err;
+    }
 
+    console.log("PocketBase login successful:", authData.record.id);
     return authData.record;
   } catch (error) {
     console.error("PocketBase login error:", error);
@@ -28,6 +34,8 @@ export async function signUp(email, password, fullName) {
     const newUser = await pb.collection("users").create(userData);
 
     console.log("PocketBase sign-up successful:", newUser.id);
+
+    await pb.collection("users").requestVerification(email);
 
     return newUser;
   } catch (error) {
@@ -49,19 +57,24 @@ export function getCurrentUser() {
 }
 
 export async function updatePassword(newPassword, oldPassword) {
-
-  console.log("Updating password for user:", pb.authStore.record.id);
-
   if (!pb.authStore.isValid) {
     throw new Error("User is not logged in.");
   }
 
+  const userId = pb.authStore.record.id;
+  const email = pb.authStore.record.email;
+
   try {
-    const result = await pb.collection("users").update(pb.authStore.record.id, {
+    const result = await pb.collection("users").update(userId, {
       oldPassword: oldPassword,
       password: newPassword,
       passwordConfirm: newPassword,
     });
+
+    // The old token is now invalid. Log in again with the new password
+    // to get a fresh one.
+    await pb.collection("users").authWithPassword(email, newPassword);
+
     return result;
   } catch (error) {
     console.error("Error updating password:", error);
@@ -76,12 +89,24 @@ export async function updateEmail(newEmail) {
   }
 
   try {
-    const result = await pb.collection("users").update(pb.authStore.record.id, {
-      email: newEmail,
-    });
-    return result;
+    // Sends a confirmation email to newEmail. The change is not applied yet.
+    await pb.collection("users").requestEmailChange(newEmail);
+    return { pending: true };
   } catch (error) {
-    console.error("Error updating email:", error);
+    console.error("Error requesting email change:", error);
+    throw error;
+  }
+}
+
+export async function resetPassword(token, newPassword) {
+  try {
+    await pb.collection("users").confirmPasswordReset(
+      token,
+      newPassword,
+      newPassword
+    );
+  } catch (error) {
+    console.error("Error confirming password reset:", error);
     throw error;
   }
 }

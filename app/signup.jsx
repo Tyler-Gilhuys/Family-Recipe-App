@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { signUp } from "../services/auth";
+import { showMessage, describeError } from "../utils/showMessage";
 
 export default function SignUpScreen() {
     const [email, setEmail] = useState("");
@@ -16,31 +17,51 @@ export default function SignUpScreen() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [fullName, setFullName] = useState("");
     const [loading, setLoading] = useState(false);
+    const [signedUp, setSignedUp] = useState(false);
 
     async function handleSignUp() {
         if (!email.trim() || !password || !confirmPassword || !fullName.trim()) {
-            Alert.alert("Missing information", "Enter your email and password.");
+            showMessage("Missing information", "Fill in all fields.");
             return;
         }
 
         if (password !== confirmPassword) {
-            Alert.alert("Password mismatch", "Passwords do not match.");
+            showMessage("Password mismatch", "Passwords do not match.");
             return;
         }
 
         try {
             setLoading(true);
             await signUp(email.trim(), password, fullName.trim());
-            router.replace("/recipe");
+            setSignedUp(true);
         } catch (error) {
             console.error("Sign up error:", error);
-            Alert.alert(
+            showMessage(
                 "Sign up failed",
-                error?.message || "Check your email and password."
+                describeError(error)
             );
         } finally {
             setLoading(false);
         }
+    }
+
+    if (signedUp) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.title}>Check your email</Text>
+                <Text style={styles.subtitle}>
+                    We sent a verification link to {email.trim()}. Click it to verify
+                    your account (check your spam folder too), then log in.
+                </Text>
+
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => router.replace("/login")}
+                >
+                    <Text style={styles.buttonText}>Go to Log In</Text>
+                </TouchableOpacity>
+            </View>
+        );
     }
 
     return (
@@ -64,7 +85,7 @@ export default function SignUpScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                autoComplete="current-password"
+                autoComplete="new-password"
             />
 
             <TextInput
@@ -73,7 +94,7 @@ export default function SignUpScreen() {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry
-                autoComplete="current-password"
+                autoComplete="new-password"
             />
 
             <TextInput
@@ -90,6 +111,12 @@ export default function SignUpScreen() {
             >
                 <Text style={styles.buttonText}>
                     {loading ? "Signing up..." : "Sign Up"}
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push("/login")}>
+                <Text style={{ textAlign: "center", marginTop: 16 }}>
+                    Already have an account? Log In
                 </Text>
             </TouchableOpacity>
         </View>

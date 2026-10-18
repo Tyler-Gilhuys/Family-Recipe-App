@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   StyleSheet,
   Text,
   TextInput,
@@ -9,28 +8,38 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { login } from "../services/auth";
+import pb from "../pocketbaseConfig";
+import { showMessage, describeError } from "../utils/showMessage";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendStatus, setResendStatus] = useState("");
 
   async function handleLogin() {
     if (!email.trim() || !password) {
-      Alert.alert("Missing information", "Enter your email and password.");
+      showMessage("Missing information", "Enter your email and password.");
       return;
     }
+
+    setNeedsVerification(false);
+    setResendStatus("");
 
     try {
       setLoading(true);
       await login(email.trim(), password);
-      // Alert.alert("Success", "You are logged in.");
-      router.replace("/recipe");
+
     } catch (error) {
+      if (error?.code === "EMAIL_NOT_VERIFIED") {
+        setNeedsVerification(true);
+        return;
+      }
       console.error("Login screen error:", error);
-      Alert.alert(
+      showMessage(
         "Login failed",
-        error?.message || "Check your email and password."
+        describeError(error)
       );
     } finally {
       setLoading(false);
@@ -71,11 +80,45 @@ export default function LoginScreen() {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/signup")}>
-        <Text>
-          {loading ? "Signing up..." : "Don't have an account? Sign Up"}
+      <TouchableOpacity onPress={() => router.push("/signup")} style={styles.link}>
+        <Text style={styles.linkText}>
+          Don't have an account? Sign Up
         </Text>
       </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push("/forgot-password")} style={styles.link}>
+        <Text style={styles.linkText}>
+          Forgot your password?
+        </Text>
+      </TouchableOpacity>
+
+      {needsVerification && (
+        <View style={styles.verifyBox}>
+          <Text style={styles.verifyText}>
+            Please verify your email to view recipes. Check your inbox (and spam)
+            for the verification link, then log in again.
+          </Text>
+
+          <TouchableOpacity
+            onPress={async () => {
+              try {
+                await pb.collection("users").requestVerification(email.trim());
+                setResendStatus("Verification email sent.");
+              } catch (e) {
+                setResendStatus(
+                  "Could not send: " + (e.response?.message ?? e.message)
+                );
+              }
+            }}
+          >
+            <Text style={styles.resendText}>Resend verification email</Text>
+          </TouchableOpacity>
+
+          {resendStatus ? (
+            <Text style={styles.resendStatus}>{resendStatus}</Text>
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }
@@ -121,6 +164,39 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  verifyBox: {
+    marginTop: 16,
+    marginBottom: 16,
+    padding: 14,
+    borderRadius: 8,
+    backgroundColor: "#fff8e1",
+    borderWidth: 1,
+    borderColor: "#f0d98c",
+    alignItems: "center",
+  },
+  verifyText: {
+    textAlign: "center",
+    color: "#5c4a00",
+    marginBottom: 10,
+  },
+  resendText: {
+    textDecorationLine: "underline",
+    color: "#276749",
+    fontWeight: "600",
+  },
+  resendStatus: {
+    marginTop: 8,
+    color: "#555",
+    textAlign: "center",
+  },
+  link: {
+    marginTop: 14,
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#276749",
+    fontWeight: "600",
   },
 });
 

@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import { useState } from "react";
 import {
     View,
     Text,
@@ -9,12 +8,14 @@ import {
     TextInput,
     ActivityIndicator,
     Alert,
+    Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import pb from "../../pocketbaseConfig";
 import { updateEmail, updatePassword } from "../../services/auth";
 import { useAppTheme } from "../../components/ThemedViews";
 import { Colors } from "../../constants/Colors";
+import { showMessage, describeError } from "../../utils/showMessage";
 
 export default function ProfileSettingsScreen() {
     const router = useRouter();
@@ -66,19 +67,6 @@ export default function ProfileSettingsScreen() {
         color: theme.title,
     };
 
-    function showMessage(title, message) {
-        Alert.alert(title, message);
-    }
-
-    function getErrorMessage(error, fallback) {
-        return (
-            error?.response?.message ||
-            error?.response?.data?.email?.message ||
-            error?.response?.data?.password?.message ||
-            error?.message ||
-            fallback
-        );
-    }
 
     async function handleUpdateEmail() {
         const email = newEmail.trim().toLowerCase();
@@ -109,15 +97,15 @@ export default function ProfileSettingsScreen() {
             setNewEmail("");
 
             showMessage(
-                "Email request submitted",
-                "Your email update was submitted. If your PocketBase configuration requires verification, follow the verification instructions before assuming the email has changed."
+                "Check your new email",
+                `We sent a confirmation link to ${email}. Your email won't change until you click it, and you'll be asked for your current password. After that, you'll need to log in again with the new address.`
             );
         } catch (error) {
             console.error("Error updating email:", error);
 
             showMessage(
                 "Email update failed",
-                getErrorMessage(error, "Unable to update your email.")
+                describeError(error),
             );
         } finally {
             setEmailLoading(false);
@@ -172,7 +160,7 @@ export default function ProfileSettingsScreen() {
 
             showMessage(
                 "Password update failed",
-                getErrorMessage(error, "Unable to update your password.")
+                describeError(error)
             );
         } finally {
             setPasswordLoading(false);
@@ -267,7 +255,7 @@ export default function ProfileSettingsScreen() {
                                     { color: mutedText },
                                 ]}
                             >
-                                Change the email associated with your account.
+                                We'll send a confirmation link to the new address. Your email changes after you click it.
                             </Text>
                         </View>
                     </View>

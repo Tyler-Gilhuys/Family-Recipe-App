@@ -59,6 +59,9 @@ const RecipeSearchHeader = ({ theme }) => {
   );
 };
 
+const isVerifiedUser = () =>
+  pb.authStore.isValid && pb.authStore.record?.verified === true;
+
 
 const RootLayout = () => {
   const colorScheme = useColorScheme();
@@ -80,8 +83,15 @@ const RootLayout = () => {
     async function initializeAuth() {
       await authReady;
 
+      try {
+        if (pb.authStore.isValid)
+          await pb.collection("users").authRefresh();
+      } catch {
+        pb.authStore.clear();
+      }
+
       if (mounted) {
-        setAuthenticated(pb.authStore.isValid);
+        setAuthenticated(isVerifiedUser());
         setReady(true);
       }
     }
@@ -89,7 +99,7 @@ const RootLayout = () => {
     initializeAuth();
 
     const unsubscribe = pb.authStore.onChange(() => {
-      setAuthenticated(pb.authStore.isValid);
+      setAuthenticated(isVerifiedUser());
     });
 
     return () => {
@@ -103,9 +113,8 @@ const RootLayout = () => {
   useEffect(() => {
     if (!ready) return;
 
-    const isPublicRoute =
-      pathname === "/login" ||
-      pathname === "/signup";
+    const isAuthRoute = pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password";
+    const isPublicRoute = isAuthRoute || pathname === "/verify" || pathname === "/confirm-email" || pathname === "/password-change";
 
     if (!authenticated && !isPublicRoute) {
       if (pathname !== "/login") {
@@ -114,7 +123,7 @@ const RootLayout = () => {
       return;
     }
 
-    if (authenticated && isPublicRoute) {
+    if (authenticated && isAuthRoute) {
       if (pathname !== "/recipe") {
         router.replace("/recipe");
       }
@@ -193,8 +202,28 @@ const RootLayout = () => {
           />
 
           <Stack.Screen
-            name="signUp"
+            name="signup"
             options={{ title: "Sign Up", headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="forgot-password"
+            options={{ title: "Forgot Password", headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="verify"
+            options={{ title: "Verify Email", headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="confirm-email"
+            options={{ title: "Confirm Email", headerShown: false }}
+          />
+
+          <Stack.Screen
+            name="password-change"
+            options={{ title: "Change Password", headerShown: false }}
           />
 
           <Stack.Screen
@@ -263,6 +292,7 @@ const RootLayout = () => {
             options={{ title: "Edit Profile", headerBackVisible: true }}
           />
         </Stack>
+
       </ThemedViews>
     </RecipeSearchProvider>
   );
