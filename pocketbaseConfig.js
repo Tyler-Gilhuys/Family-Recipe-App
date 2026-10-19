@@ -13,7 +13,10 @@ const authStore = new AsyncAuthStore({
     initial: initialAuth,
 });
 
-const pb = new PocketBase("http://192.168.1.14:8090", authStore);
+const POCKETBASE_URL =
+    process.env.EXPO_PUBLIC_POCKETBASE_URL || "http://192.168.1.14:8090";
+
+const pb = new PocketBase(POCKETBASE_URL, authStore);
 
 export const authReady = initialAuth;
 
