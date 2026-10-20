@@ -19,7 +19,7 @@ export default function ProfileSettingsScreen() {
     const router = useRouter();
     const {
         theme,
-        colorScheme,
+        card,
         width: windowWidth,
     } = useAppTheme();
 
@@ -38,26 +38,12 @@ export default function ProfileSettingsScreen() {
     const [showOldPassword, setShowOldPassword] = useState(false);
 
     const contentWidth = Math.min(windowWidth - 32, 760);
-
-    const cardBackground =
-        colorScheme === "dark"
-            ? Colors.light.uiBackground
-            : Colors.dark.uiBackground;
-
-    const cardBorder =
-        colorScheme === "dark"
-            ? Colors.light.navBackground
-            : Colors.dark.navBackground;
-
-    const cardText =
-        colorScheme === "dark"
-            ? Colors.light.text
-            : Colors.dark.text;
-
-    const mutedText =
-        colorScheme === "dark"
-            ? Colors.light.iconColor
-            : Colors.dark.iconColor;
+    const {
+        background: cardBackground,
+        border: cardBorder,
+        text: cardText,
+        muted: mutedText,
+    } = card;
 
     const inputStyle = {
         backgroundColor: cardBackground,

@@ -11,28 +11,20 @@ import { Link, useFocusEffect } from "expo-router";
 import { useAppTheme } from "../../components/ThemedViews";
 import React, { forwardRef, useCallback, useState } from "react";
 import pb from "../../pocketbaseConfig";
-import { Colors } from "../../constants/Colors";
 import { useRecipeSearch } from "../../contexts/RecipeSearchContext";
 import { CATEGORIES } from "../../constants/categories";
 
 const Slide = forwardRef(
-  ({ data, theme, cardWidth, imageWidth, ...props }, ref) => (
+  ({ data, card, cardWidth, imageWidth, ...props }, ref) => (
     <Pressable
       ref={ref}
       {...props}
-      // onPress={onPress}
       style={({ pressed }) => StyleSheet.flatten([
         styles.slide,
         {
           width: cardWidth,
-          backgroundColor:
-            theme === Colors.dark
-              ? Colors.light.uiBackground
-              : Colors.dark.uiBackground,
-          borderColor:
-            theme === Colors.dark
-              ? Colors.light.navBackground
-              : Colors.dark.navBackground,
+          backgroundColor: card.background,
+          borderColor: card.border,
           opacity: pressed ? 0.85 : 1,
         },
       ])}
@@ -44,27 +36,14 @@ const Slide = forwardRef(
           resizeMode="cover"
         />
       ) : (
-        <View
-          style={[
-            styles.noImagePlaceholder,
-            { width: imageWidth },
-          ]}
-        >
+        <View style={[styles.noImagePlaceholder, { width: imageWidth }]}>
           <Text style={styles.noImageIcon}>🍽</Text>
           <Text style={styles.noImageText}>No photo yet</Text>
         </View>
       )}
 
       <Text
-        style={[
-          styles.slideText,
-          {
-            color:
-              theme === Colors.dark
-                ? Colors.light.text
-                : Colors.dark.text,
-          },
-        ]}
+        style={[styles.slideText, { color: card.text }]}
         numberOfLines={2}
       >
         {data.name}
@@ -72,11 +51,10 @@ const Slide = forwardRef(
     </Pressable>
   )
 );
-
 Slide.displayName = "Slide";
 
 const Recipe = () => {
-  const { theme, width: windowWidth, isPhone, isTablet, isCompact } = useAppTheme();
+  const { theme, width: windowWidth, isPhone, isTablet, isCompact, card, } = useAppTheme();
   const [allRecipes, setAllRecipes] = useState([]);
   const { searchQuery, setSearchQuery } = useRecipeSearch();
 
@@ -253,7 +231,7 @@ const Recipe = () => {
                   >
                     <Slide
                       data={recipe}
-                      theme={theme}
+                      card={card}
                       cardWidth={cardWidth}
                       imageWidth={imageWidth}
                     />

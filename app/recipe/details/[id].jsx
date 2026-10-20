@@ -29,7 +29,9 @@ export default function RecipeDetails() {
   const {
     theme,
     width: windowWidth,
+    card,
   } = useAppTheme();
+  const { background: cardBackground, border: cardBorder, text: cardText } = card;
 
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,22 +41,6 @@ export default function RecipeDetails() {
   const [posting, setPosting] = useState(false);
 
   const recipeId = Array.isArray(id) ? id[0] : id;
-
-  // Match the card contrast used on the category page.
-  const cardBackground =
-    theme === Colors.dark
-      ? Colors.light.uiBackground
-      : Colors.dark.uiBackground;
-
-  const cardBorder =
-    theme === Colors.dark
-      ? Colors.light.navBackground
-      : Colors.dark.navBackground;
-
-  const cardText =
-    theme === Colors.dark
-      ? Colors.light.text
-      : Colors.dark.text;
 
   const isAuthor = recipe?.author === pb.authStore.record?.id;
 

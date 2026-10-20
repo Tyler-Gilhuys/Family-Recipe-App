@@ -30,6 +30,14 @@ const ThemedViews = ({ style, ...props }) => {
   const isDesktop = width >= BREAKPOINTS.tablet;
   const isCompact = width < HEADER_COMPACT_WIDTH;
 
+  const isDark = colorScheme === "dark";
+  const card = {
+    background: isDark ? Colors.light.uiBackground : Colors.dark.uiBackground,
+    border: isDark ? Colors.light.navBackground : Colors.dark.navBackground,
+    text: isDark ? Colors.light.text : Colors.dark.text,
+    muted: isDark ? Colors.light.iconColor : Colors.dark.iconColor,
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -43,6 +51,7 @@ const ThemedViews = ({ style, ...props }) => {
         isTablet,
         isDesktop,
         isCompact,
+        card,
       }}
     >
       <View

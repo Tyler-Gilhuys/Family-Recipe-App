@@ -14,25 +14,13 @@ import { Colors } from "../constants/Colors";
 
 export default function ProfileScreen() {
     const router = useRouter();
-    const { theme, colorScheme, width: windowWidth } = useAppTheme();
+    const { theme, card, width: windowWidth } = useAppTheme();
     const user = pb.authStore.record;
 
     const contentWidth = Math.min(windowWidth - 32, 760);
 
-    const cardBackground =
-        colorScheme === "dark"
-            ? Colors.light.uiBackground
-            : Colors.dark.uiBackground;
+    const { background: cardBackground, border: cardBorder, text: cardText } = card;
 
-    const cardBorder =
-        colorScheme === "dark"
-            ? Colors.light.navBackground
-            : Colors.dark.navBackground;
-
-    const cardText =
-        colorScheme === "dark"
-            ? Colors.light.text
-            : Colors.dark.text;
 
     function handleLogout() {
         logout();

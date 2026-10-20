@@ -22,22 +22,8 @@ import { CATEGORIES } from "../constants/categories";
 
 const AddRecipe = () => {
   const router = useRouter();
-  const { theme } = useAppTheme();
-
-  const cardBackground =
-    theme === Colors.dark
-      ? Colors.light.uiBackground
-      : Colors.dark.uiBackground;
-
-  const cardBorder =
-    theme === Colors.dark
-      ? Colors.light.navBackground
-      : Colors.dark.navBackground;
-
-  const cardText =
-    theme === Colors.dark
-      ? Colors.light.text
-      : Colors.dark.text;
+  const { theme, card } = useAppTheme();
+  const { background: cardBackground, border: cardBorder, text: cardText } = card;
 
   const [imageUri, setImageUri] = useState(null);
   const [recipeName, setRecipeName] = useState("");
@@ -46,7 +32,6 @@ const AddRecipe = () => {
   const [comments, setComments] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
-
 
   const handlePickImage = async () => {
     if (loading) return;

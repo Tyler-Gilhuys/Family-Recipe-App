@@ -26,27 +26,14 @@ export default function EditRecipe() {
   const router = useRouter();
   const {
     theme,
-    colorScheme,
+    card,
     width: windowWidth,
   } = useAppTheme();
 
+  const { background: cardBackground, border: cardBorder, text: cardText } = card;
+
   const recipeId = Array.isArray(id) ? id[0] : id;
   const contentWidth = Math.min(windowWidth - 32, 760);
-
-  const cardBackground =
-    colorScheme === "dark"
-      ? Colors.light.uiBackground
-      : Colors.dark.uiBackground;
-
-  const cardBorder =
-    colorScheme === "dark"
-      ? Colors.light.navBackground
-      : Colors.dark.navBackground;
-
-  const cardText =
-    colorScheme === "dark"
-      ? Colors.light.text
-      : Colors.dark.text;
 
   const [recipeName, setRecipeName] = useState("");
   const [ingredients, setIngredients] = useState("");

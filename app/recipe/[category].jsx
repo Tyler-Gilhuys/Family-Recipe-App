@@ -9,7 +9,6 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useAppTheme } from "../../components/ThemedViews";
-import { Colors } from "../../constants/Colors";
 import pb from "../../pocketbaseConfig";
 
 export default function CategoryScreen() {
@@ -19,6 +18,7 @@ export default function CategoryScreen() {
     width: windowWidth,
     isPhone,
     isTablet,
+    card,
   } = useAppTheme();
 
   const [recipes, setRecipes] = useState([]);
@@ -60,20 +60,7 @@ export default function CategoryScreen() {
     fetchRecipes();
   }, [categoryName]);
 
-  const cardBackground =
-    theme === Colors.dark
-      ? Colors.light.uiBackground
-      : Colors.dark.uiBackground;
-
-  const cardBorder =
-    theme === Colors.dark
-      ? Colors.light.navBackground
-      : Colors.dark.navBackground;
-
-  const cardText =
-    theme === Colors.dark
-      ? Colors.light.text
-      : Colors.dark.text;
+  const { background: cardBackground, border: cardBorder, text: cardText } = card;
 
   return (
     <View
