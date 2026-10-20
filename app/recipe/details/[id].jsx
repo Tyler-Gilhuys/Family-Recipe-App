@@ -8,7 +8,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   Pressable,
-  Alert,
   TextInput,
 } from "react-native";
 import {
@@ -20,8 +19,7 @@ import pb from "../../../pocketbaseConfig";
 import { useAppTheme } from "../../../components/ThemedViews";
 import { Colors } from "../../../constants/Colors";
 import { deleteRecipe, getComments, addComment, deleteComment } from "../../../services/recipes";
-import { showMessage, describeError } from "../../../utils/showMessage";
-
+import { showMessage, describeError, confirmAction } from "../../../utils/showMessage";
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -94,55 +92,25 @@ export default function RecipeDetails() {
     }, [recipeId])
   );
 
-  const handleDelete = () => {
-    const performDelete = async () => {
-      if (deleting) return;
+  const handleDelete = async () => {
+    if (deleting) return;
 
-      setDeleting(true);
-
-      try {
-        await deleteRecipe(recipeId);
-        router.replace("/recipe");
-      } catch (error) {
-        console.error("Error deleting recipe:", error);
-
-        const message =
-          error?.message || "Unable to delete this recipe.";
-
-        if (typeof window !== "undefined" && window.alert) {
-          window.alert(`Delete failed: ${message}`);
-        } else {
-          Alert.alert("Delete failed", message);
-        }
-
-        setDeleting(false);
-      }
-    };
-
-    if (typeof window !== "undefined" && window.confirm) {
-      if (
-        window.confirm(
-          "Are you sure you want to permanently delete this recipe?"
-        )
-      ) {
-        performDelete();
-      }
-
-      return;
-    }
-
-    Alert.alert(
+    const confirmed = await confirmAction(
       "Delete Recipe",
-      "Are you sure you want to permanently delete this recipe?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: performDelete,
-        },
-      ]
+      "Are you sure you want to permanently delete this recipe?"
     );
+    if (!confirmed) return;
+
+    setDeleting(true);
+
+    try {
+      await deleteRecipe(recipeId);
+      router.replace("/recipe");
+    } catch (error) {
+      console.error("Error deleting recipe:", error);
+      showMessage("Delete failed", describeError(error));
+      setDeleting(false);
+    }
   };
 
   async function handleAddComment() {

@@ -2,7 +2,8 @@
 import { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import pb, { authReady } from "../pocketbaseConfig";
+import { authReady } from "../pocketbaseConfig";
+import { isVerifiedUser } from "../services/auth";
 
 export default function Index() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function Index() {
       if (!mounted) return;
 
       router.replace(
-        pb.authStore.isValid ? "/recipe" : "/login"
+        isVerifiedUser() ? "/recipe" : "/login"
       );
     }
 

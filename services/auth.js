@@ -56,6 +56,10 @@ export function getCurrentUser() {
   return pb.authStore.record;
 }
 
+export function isVerifiedUser() {
+  return pb.authStore.isValid && pb.authStore.record?.verified === true;
+}
+
 export async function updatePassword(newPassword, oldPassword) {
   if (!pb.authStore.isValid) {
     throw new Error("User is not logged in.");

@@ -7,6 +7,7 @@ import pb, { authReady } from "../pocketbaseConfig";
 import ThemedViews from "../components/ThemedViews";
 import { RecipeSearchProvider, useRecipeSearch } from "../contexts/RecipeSearchContext";
 import { HEADER_COMPACT_WIDTH } from "../constants/layout";
+import { isVerifiedUser } from "../services/auth";
 
 const RecipeSearchHeader = ({ theme }) => {
   const { searchQuery, setSearchQuery } = useRecipeSearch();
@@ -59,10 +60,6 @@ const RecipeSearchHeader = ({ theme }) => {
 
   );
 };
-
-const isVerifiedUser = () =>
-  pb.authStore.isValid && pb.authStore.record?.verified === true;
-
 
 const RootLayout = () => {
   const colorScheme = useColorScheme();
@@ -171,7 +168,7 @@ const RootLayout = () => {
                   marginRight: 8,
                 }}
               >
-                <Pressable onPress={() => router.push("recipe")}>
+                <Pressable onPress={() => router.push("/recipe")}>
                   <Text style={{ color: theme.title, fontWeight: "600" }}>
                     Home
                   </Text>
