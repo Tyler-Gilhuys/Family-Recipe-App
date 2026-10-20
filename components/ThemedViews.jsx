@@ -6,6 +6,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Colors } from "../constants/Colors";
+import { BREAKPOINTS, HEADER_COMPACT_WIDTH } from "../constants/layout";
 
 const AppContext = createContext(null);
 
@@ -24,9 +25,10 @@ const ThemedViews = ({ style, ...props }) => {
   const theme = Colors[colorScheme] ?? Colors.light;
   const { width, height, scale, fontScale } = useWindowDimensions();
 
-  const isPhone = width < 600;
-  const isTablet = width >= 600 && width < 1000;
-  const isDesktop = width >= 1000;
+  const isPhone = width < BREAKPOINTS.phone;
+  const isTablet = width >= BREAKPOINTS.phone && width < BREAKPOINTS.tablet;
+  const isDesktop = width >= BREAKPOINTS.tablet;
+  const isCompact = width < HEADER_COMPACT_WIDTH;
 
   return (
     <AppContext.Provider
@@ -40,6 +42,7 @@ const ThemedViews = ({ style, ...props }) => {
         isPhone,
         isTablet,
         isDesktop,
+        isCompact,
       }}
     >
       <View

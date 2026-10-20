@@ -6,6 +6,7 @@ import { Colors } from "../constants/Colors";
 import pb, { authReady } from "../pocketbaseConfig";
 import ThemedViews from "../components/ThemedViews";
 import { RecipeSearchProvider, useRecipeSearch } from "../contexts/RecipeSearchContext";
+import { HEADER_COMPACT_WIDTH } from "../constants/layout";
 
 const RecipeSearchHeader = ({ theme }) => {
   const { searchQuery, setSearchQuery } = useRecipeSearch();
@@ -74,7 +75,7 @@ const RootLayout = () => {
   const pathname = usePathname();
 
   const { width } = useWindowDimensions();
-  const isNarrow = width < 700;
+  const isNarrow = width < HEADER_COMPACT_WIDTH;
 
   // Load the saved session and listen for login/logout changes.
   useEffect(() => {

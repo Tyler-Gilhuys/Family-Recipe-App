@@ -19,18 +19,7 @@ import pb from "../../../pocketbaseConfig";
 import { pickImage } from "../../../utils/ImagePicker";
 import { updateRecipe } from "../../../services/recipes";
 import { uploadRecipeImage } from "../../../services/recipeImages";
-
-const categoriesList = [
-  "Breakfast",
-  "Lunch",
-  "Dinner",
-  "Christmas",
-  "Thanksgiving",
-  "Sides",
-  "Dessert",
-  "Beverages",
-  "Extras",
-];
+import { CATEGORIES } from "../../../constants/categories";
 
 export default function EditRecipe() {
   const { id } = useLocalSearchParams();
@@ -349,7 +338,7 @@ export default function EditRecipe() {
           </Text>
 
           <View style={styles.categories}>
-            {categoriesList.map((category) => {
+            {CATEGORIES.map((category) => {
               const selected = selectedCategories.includes(category);
 
               return (

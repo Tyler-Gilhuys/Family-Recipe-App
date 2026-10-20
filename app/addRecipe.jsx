@@ -17,19 +17,7 @@ import { pickImage } from "../utils/ImagePicker";
 import { createRecipe } from "../services/recipes";
 import { uploadRecipeImage } from "../services/recipeImages";
 import { showMessage, describeError } from "../utils/showMessage";
-
-const categoriesList = [
-  "Breakfast",
-  "Lunch",
-  "Dinner",
-  "Christmas",
-  "Thanksgiving",
-  "Sides",
-  "Dessert",
-  "Beverages",
-  "Extras",
-];
-
+import { CATEGORIES } from "../constants/categories";
 
 
 const AddRecipe = () => {
@@ -92,7 +80,7 @@ const AddRecipe = () => {
   const handleSubmit = async () => {
     if (loading) return;
 
-    if (!recipeName.trim() || !ingredients.trim() || !steps.trim() || !categoriesList.some((cat) => selectedCategories.includes(cat))) {
+    if (!recipeName.trim() || !ingredients.trim() || !steps.trim() || !CATEGORIES.some((cat) => selectedCategories.includes(cat))) {
       showMessage("Missing Information", "Please fill in all required fields and select at least one category.");
       return;
     }
@@ -278,7 +266,7 @@ const AddRecipe = () => {
       </Text>
 
       <View style={styles.categoriesContainer}>
-        {categoriesList.map((category) => {
+        {CATEGORIES.map((category) => {
           const isSelected = selectedCategories.includes(category);
 
           return (

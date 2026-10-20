@@ -13,6 +13,7 @@ import React, { forwardRef, useCallback, useState } from "react";
 import pb from "../../pocketbaseConfig";
 import { Colors } from "../../constants/Colors";
 import { useRecipeSearch } from "../../contexts/RecipeSearchContext";
+import { CATEGORIES } from "../../constants/categories";
 
 const Slide = forwardRef(
   ({ data, theme, cardWidth, imageWidth, ...props }, ref) => (
@@ -75,7 +76,7 @@ const Slide = forwardRef(
 Slide.displayName = "Slide";
 
 const Recipe = () => {
-  const { theme, width: windowWidth, isPhone, isTablet } = useAppTheme();
+  const { theme, width: windowWidth, isPhone, isTablet, isCompact } = useAppTheme();
   const [allRecipes, setAllRecipes] = useState([]);
   const { searchQuery, setSearchQuery } = useRecipeSearch();
 
@@ -125,16 +126,7 @@ const Recipe = () => {
   const query = searchQuery.trim().toLowerCase();
   const isSearching = query.length > 0;
 
-  const categories = [
-    { key: "Breakfast" },
-    { key: "Dinner" },
-    { key: "Christmas" },
-    { key: "Thanksgiving" },
-    { key: "Sides" },
-    { key: "Dessert" },
-    { key: "Beverages" },
-    { key: "Extras" },
-  ]
+  const categories = CATEGORIES.map((key) => ({ key }))
     .map((category) => {
       const inCategory = allRecipes.filter((recipe) =>
         recipe.categories?.includes(category.key)
@@ -171,7 +163,7 @@ const Recipe = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      {isPhone && (
+      {isCompact && (
         <View style={{ padding: 10 }}>
           <TextInput
             value={searchQuery}
