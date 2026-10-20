@@ -1,61 +1,24 @@
 import {
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
-  View,
-  Image,
-  Pressable,
   TextInput,
+  View,
 } from "react-native";
-import { Link, useFocusEffect } from "expo-router";
+import { Link } from "expo-router";
 import { useAppTheme } from "../../components/ThemedViews";
-import React, { forwardRef, useCallback, useState } from "react";
-import pb from "../../pocketbaseConfig";
-import { useRecipeSearch } from "../../contexts/RecipeSearchContext";
+import RecipeCard from "../../components/RecipeCard";
+import { useRecipes } from "../../hooks/useRecipes";
 import { CATEGORIES } from "../../constants/categories";
+import { useRecipeSearch } from "../../contexts/RecipeSearchContext";
 
-const Slide = forwardRef(
-  ({ data, card, cardWidth, imageWidth, ...props }, ref) => (
-    <Pressable
-      ref={ref}
-      {...props}
-      style={({ pressed }) => StyleSheet.flatten([
-        styles.slide,
-        {
-          width: cardWidth,
-          backgroundColor: card.background,
-          borderColor: card.border,
-          opacity: pressed ? 0.85 : 1,
-        },
-      ])}
-    >
-      {data.image ? (
-        <Image
-          source={data.image}
-          style={[styles.slideImage, { width: imageWidth }]}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={[styles.noImagePlaceholder, { width: imageWidth }]}>
-          <Text style={styles.noImageIcon}>🍽</Text>
-          <Text style={styles.noImageText}>No photo yet</Text>
-        </View>
-      )}
-
-      <Text
-        style={[styles.slideText, { color: card.text }]}
-        numberOfLines={2}
-      >
-        {data.name}
-      </Text>
-    </Pressable>
-  )
-);
-Slide.displayName = "Slide";
+const PREVIEW_COUNT = 4;
 
 const Recipe = () => {
-  const { theme, width: windowWidth, isPhone, isTablet, isCompact, card, } = useAppTheme();
-  const [allRecipes, setAllRecipes] = useState([]);
+  const { theme, width: windowWidth, isPhone, isTablet, isCompact } =
+    useAppTheme();
+  const { recipes: allRecipes } = useRecipes();
   const { searchQuery, setSearchQuery } = useRecipeSearch();
 
   const cardWidth = isPhone
@@ -66,76 +29,34 @@ const Recipe = () => {
 
   const imageWidth = Math.min(cardWidth - 32, 180);
 
-  useFocusEffect(
-    useCallback(() => {
-      const fetchRecipes = async () => {
-        try {
-          if (!pb.authStore.isValid) {
-            console.log("Please log in to view recipes.");
-            setAllRecipes([]);
-            return;
-          }
-
-          const records = await pb.collection("recipes").getFullList({
-            sort: "-created",
-          });
-
-          const data = records.map((record) => ({
-            id: record.id,
-            name: record.title,
-            image: record.image
-              ? {
-                uri: pb.files.getURL(record, record.image),
-              }
-              : null,
-            categories: record.categories || [],
-          }));
-
-          setAllRecipes(data);
-        } catch (error) {
-          console.error("Error fetching PocketBase recipes:", error);
-        }
-      };
-
-      fetchRecipes();
-    }, [])
-  );
-
   const query = searchQuery.trim().toLowerCase();
   const isSearching = query.length > 0;
 
-  const categories = CATEGORIES.map((key) => ({ key }))
-    .map((category) => {
-      const inCategory = allRecipes.filter((recipe) =>
-        recipe.categories?.includes(category.key)
-      );
+  const categories = CATEGORIES.map((key) => {
+    const inCategory = allRecipes.filter((recipe) =>
+      recipe.categories.includes(key)
+    );
 
-      // While searching, keep only matching recipes.
-      const filtered = isSearching
-        ? inCategory.filter((recipe) =>
-          (recipe.name ?? "").toLowerCase().includes(query)
-        )
-        : inCategory;
+    // While searching, keep only matching recipes.
+    const filtered = isSearching
+      ? inCategory.filter((recipe) =>
+        (recipe.title ?? "").toLowerCase().includes(query)
+      )
+      : inCategory;
 
-      // Normal view: first 4 + "View All". Search view: show every match.
-      const preview = isSearching ? filtered : filtered.slice(0, 4);
+    // Normal view: first few + "View All". Search view: show every match.
+    const preview = isSearching ? filtered : filtered.slice(0, PREVIEW_COUNT);
 
-      return {
-        ...category,
-        recipes: [
-          ...preview,
-          ...(!isSearching && filtered.length > 4
-            ? [
-              {
-                id: `view-all-${category.key}`,
-                type: "viewAll",
-                category: category.key,
-              },
-            ]
-            : []),
-        ],
-      };
-    })
+    return {
+      key,
+      recipes: [
+        ...preview,
+        ...(!isSearching && filtered.length > PREVIEW_COUNT
+          ? [{ id: `view-all-${key}`, type: "viewAll", category: key }]
+          : []),
+      ],
+    };
+  })
     // Hide categories with no matches while searching.
     .filter((category) => !isSearching || category.recipes.length > 0);
 
@@ -182,22 +103,14 @@ const Recipe = () => {
           ) : null
         }
         renderItem={({ item }) => (
-          <View style={styles.categoryContainer}>
-            <Link
-              href={`/recipe/${encodeURIComponent(item.key)}`}
-              asChild
-            >
+          <View>
+            <Link href={`/recipe/${encodeURIComponent(item.key)}`} asChild>
               <Pressable
                 style={styles.categoryHeader}
                 accessibilityRole="button"
                 accessibilityLabel={`View all ${item.key} recipes`}
               >
-                <Text
-                  style={[
-                    styles.categoryTitle,
-                    { color: theme.text },
-                  ]}
-                >
+                <Text style={[styles.categoryTitle, { color: theme.text }]}>
                   {item.key}
                 </Text>
               </Pressable>
@@ -214,7 +127,6 @@ const Recipe = () => {
                     >
                       <Pressable
                         style={StyleSheet.flatten([
-                          styles.slide,
                           styles.viewAllCard,
                         ])}
                       >
@@ -225,13 +137,9 @@ const Recipe = () => {
                 }
 
                 return (
-                  <Link
-                    href={`/recipe/details/${recipe.id}`}
-                    asChild
-                  >
-                    <Slide
-                      data={recipe}
-                      card={card}
+                  <Link href={`/recipe/details/${recipe.id}`} asChild>
+                    <RecipeCard
+                      recipe={recipe}
                       cardWidth={cardWidth}
                       imageWidth={imageWidth}
                     />
@@ -242,7 +150,6 @@ const Recipe = () => {
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
-              style={styles.carousel}
               contentContainerStyle={styles.carouselContainer}
             />
           </View>
@@ -255,43 +162,8 @@ const Recipe = () => {
 export default Recipe;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  title: {
-    fontWeight: "bold",
-    fontSize: 25,
-  },
-  item: {
-    padding: 10,
-  },
-  slide: {
-    marginHorizontal: 10, // Space between cards
-    borderRadius: 12, // Rounded corners for card feel
-    borderWidth: 1, // Thin border for separation
-    padding: 15, // Inner padding for content
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 5, // Stronger shadow for Android
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  slideImage: {
-    height: 120, // Adjust as needed
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  slideText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  // Add this if you want extra separation (e.g., background stripes)
   carouselContainer: {
     paddingHorizontal: 10,
-    // backgroundColor: theme.background || "#f5f5f5", // Use theme background for overall separation
   },
   categoryHeader: {
     flexDirection: "row",
@@ -300,49 +172,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-
   categoryTitle: {
     fontSize: 18,
     fontWeight: "bold",
   },
-
-  categoryAction: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
   viewAllCard: {
+    marginHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#565555",
   },
-
   viewAllText: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
-    alignItems: "center",
-  },
-
-  noImagePlaceholder: {
-    height: 120,
-    borderRadius: 8,
-    marginBottom: 10,
-    backgroundColor: "#F0EDE7",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#E2DDD3",
-  },
-
-  noImageIcon: {
-    fontSize: 32,
-    marginBottom: 6,
-  },
-
-  noImageText: {
-    fontSize: 11,
-    color: "#81796D",
-    fontWeight: "500",
   },
 });

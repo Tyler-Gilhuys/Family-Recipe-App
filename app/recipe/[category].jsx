@@ -1,77 +1,29 @@
-import {
-  View,
-  FlatList,
-  Text,
-  StyleSheet,
-  Image,
-  Pressable,
-} from "react-native";
+import { View, FlatList, Text, StyleSheet } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { useEffect, useState } from "react";
 import { useAppTheme } from "../../components/ThemedViews";
-import pb from "../../pocketbaseConfig";
+import RecipeCard from "../../components/RecipeCard";
+import { useRecipes } from "../../hooks/useRecipes";
 
 export default function CategoryScreen() {
   const { category } = useLocalSearchParams();
-  const {
-    theme,
-    width: windowWidth,
-    isPhone,
-    isTablet,
-    card,
-  } = useAppTheme();
-
-  const [recipes, setRecipes] = useState([]);
+  const { theme, width: windowWidth, isPhone, isTablet } = useAppTheme();
 
   const categoryName = Array.isArray(category) ? category[0] : category;
+  const { recipes } = useRecipes({ category: categoryName });
 
   // Match the responsive sizing used on the main recipe page.
   const cardWidth = isPhone
-    ? Math.min(windowWidth * 0.90, 440)
+    ? Math.min(windowWidth * 0.9, 440)
     : isTablet
       ? Math.min(windowWidth * 0.65, 560)
-      : Math.min(windowWidth * 0.80, 600);
+      : Math.min(windowWidth * 0.8, 600);
 
   const imageWidth = cardWidth - 40;
   const imageHeight = Math.min(imageWidth * 0.65, 280);
 
-  useEffect(() => {
-    const fetchRecipes = async () => {
-      try {
-        if (!pb.authStore.isValid) {
-          setRecipes([]);
-          return;
-        }
-
-        const records = await pb.collection("recipes").getFullList({
-          sort: "-created",
-        });
-
-        const filtered = records.filter((recipe) =>
-          recipe.categories?.includes(categoryName)
-        );
-
-        setRecipes(filtered);
-      } catch (error) {
-        console.error("Error fetching PocketBase category recipes:", error);
-      }
-    };
-
-    fetchRecipes();
-  }, [categoryName]);
-
-  const { background: cardBackground, border: cardBorder, text: cardText } = card;
-
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: theme.background },
-      ]}
-    >
-      <Text style={[styles.title, { color: theme.text }]}>
-        {categoryName}
-      </Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>{categoryName}</Text>
 
       <FlatList
         data={recipes}
@@ -80,49 +32,22 @@ export default function CategoryScreen() {
         contentContainerStyle={styles.list}
         numColumns={1}
         renderItem={({ item }) => (
-          <Pressable
+          <RecipeCard
+            recipe={item}
+            large
+            cardWidth={cardWidth}
+            imageWidth={imageWidth}
+            imageHeight={imageHeight}
             onPress={() => router.push(`/recipe/details/${item.id}`)}
-            style={({ pressed }) => ({
-              ...StyleSheet.flatten(styles.card),
-              width: cardWidth,
-              backgroundColor: cardBackground,
-              borderColor: cardBorder,
-              opacity: pressed ? 0.85 : 1,
-            })}
-          >
-            {item.image ? (
-              <Image
-                source={{
-                  uri: pb.files.getURL(item, item.image),
-                }}
-                style={[styles.image, { width: imageWidth, height: imageHeight }]}
-                resizeMode="cover"
-              />
-            ) : (
-              <View
-                style={[styles.noImage, { width: imageWidth, height: imageHeight }]}
-              >
-                <Text style={styles.noImageIcon}>🍽</Text>
-                <Text style={styles.noImageText}>No photo yet</Text>
-              </View>
-            )}
-
-            <Text
-              style={[styles.name, { color: cardText }]}
-              numberOfLines={2}
-            >
-              {item.title}
-            </Text>
-          </Pressable>
-        )
-        }
+          />
+        )}
         ListEmptyComponent={
-          < Text style={[styles.empty, { color: theme.text }]} >
+          <Text style={[styles.empty, { color: theme.text }]}>
             No recipes found in this category yet.
-          </Text >
+          </Text>
         }
       />
-    </View >
+    </View>
   );
 }
 
@@ -142,48 +67,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingBottom: 20,
     alignItems: "center",
-  },
-  card: {
-    marginVertical: 12,
-    marginHorizontal: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  image: {
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  noImage: {
-    borderRadius: 8,
-    marginBottom: 12,
-    backgroundColor: "#F0EDE7",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#E2DDD3",
-  },
-  noImageIcon: {
-    fontSize: 32,
-    marginBottom: 6,
-  },
-  noImageText: {
-    fontSize: 11,
-    color: "#81796D",
-    fontWeight: "500",
   },
   empty: {
     marginTop: 24,
