@@ -1,14 +1,8 @@
 import { useState } from "react";
-import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
 import { router } from "expo-router";
 import { requestPasswordReset } from "../services/auth";
 import { showMessage, describeError } from "../utils/showMessage";
+import { AuthScreen, AuthInput, AuthButton, AuthLink } from "../components/AuthUI";
 
 export default function ForgotPasswordScreen() {
     const [email, setEmail] = useState("");
@@ -30,22 +24,15 @@ export default function ForgotPasswordScreen() {
             router.replace("/login");
         } catch (error) {
             console.error("Forgot password error:", error);
-            showMessage(
-                "Reset failed",
-                describeError(error)
-            );
+            showMessage("Reset failed", describeError(error));
         } finally {
             setLoading(false);
         }
     }
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Gilhuys Family Recipe Book</Text>
-            <Text style={styles.subtitle}>Reset Password</Text>
-
-            <TextInput
-                style={styles.input}
+        <AuthScreen title="Gilhuys Family Recipe Book" subtitle="Reset Password">
+            <AuthInput
                 placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
@@ -54,91 +41,18 @@ export default function ForgotPasswordScreen() {
                 autoComplete="email"
             />
 
-            <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
+            <AuthButton
+                label="Reset Password"
+                loadingLabel="Resetting password..."
+                loading={loading}
                 onPress={handleResetPassword}
-                disabled={loading}
-            >
-                <Text style={styles.buttonText}>
-                    {loading ? "Resetting password..." : "Reset Password"}
-                </Text>
-            </TouchableOpacity>
+            />
 
-            <TouchableOpacity onPress={() => router.replace("/signup")}>
-                <Text>
-                    &quot;Don&apos;t have an account? Sign Up&quot;
-                </Text>
-            </TouchableOpacity>
-        </View>
+            <AuthLink
+                label="Don't have an account? Sign Up"
+                onPress={() => router.replace("/signup")}
+            />
+            <AuthLink label="Back to log in" onPress={() => router.replace("/login")} />
+        </AuthScreen>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        padding: 24,
-        backgroundColor: "#f5f5f5",
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: "bold",
-        textAlign: "center",
-        marginBottom: 8,
-    },
-    subtitle: {
-        fontSize: 16,
-        textAlign: "center",
-        marginBottom: 28,
-        color: "#555",
-    },
-    input: {
-        backgroundColor: "#fff",
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        padding: 14,
-        marginBottom: 14,
-        fontSize: 16,
-    },
-    button: {
-        backgroundColor: "#276749",
-        padding: 15,
-        borderRadius: 8,
-        alignItems: "center",
-    },
-    buttonDisabled: {
-        opacity: 0.6,
-    },
-    buttonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "bold",
-    },
-    verifyBox: {
-        marginTop: 16,
-        marginBottom: 16,
-        padding: 14,
-        borderRadius: 8,
-        backgroundColor: "#fff8e1",
-        borderWidth: 1,
-        borderColor: "#f0d98c",
-        alignItems: "center",
-    },
-    verifyText: {
-        textAlign: "center",
-        color: "#5c4a00",
-        marginBottom: 10,
-    },
-    resendText: {
-        textDecorationLine: "underline",
-        color: "#276749",
-        fontWeight: "600",
-    },
-    resendStatus: {
-        marginTop: 8,
-        color: "#555",
-        textAlign: "center",
-    },
-});
-

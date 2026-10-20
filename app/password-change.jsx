@@ -1,17 +1,12 @@
 import { useState } from "react";
-import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { resetPassword } from "../services/auth";
+import { useTokenParam } from "../hooks/useTokenParam";
 import { showMessage, describeError } from "../utils/showMessage";
+import { AuthScreen, AuthInput, AuthButton, AuthLink } from "../components/AuthUI";
 
 export default function PasswordChangeScreen() {
-    const { token } = useLocalSearchParams();
+    const token = useTokenParam();
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -43,7 +38,7 @@ export default function PasswordChangeScreen() {
 
         try {
             setLoading(true);
-            await resetPassword(String(token), password);
+            await resetPassword(token, password);
             setDone(true);
         } catch (error) {
             console.error("Reset password screen error:", error);
@@ -55,28 +50,18 @@ export default function PasswordChangeScreen() {
 
     if (done) {
         return (
-            <View style={styles.container}>
-                <Text style={styles.title}>Password updated</Text>
-                <Text style={styles.subtitle}>
-                    Your password has been changed. Log in with your new password.
-                </Text>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => router.replace("/login")}
-                >
-                    <Text style={styles.buttonText}>Go to Log In</Text>
-                </TouchableOpacity>
-            </View>
+            <AuthScreen
+                title="Password updated"
+                subtitle="Your password has been changed. Log in with your new password."
+            >
+                <AuthButton label="Go to Log In" onPress={() => router.replace("/login")} />
+            </AuthScreen>
         );
     }
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Gilhuys Family Recipe Book</Text>
-            <Text style={styles.subtitle}>Choose a new password</Text>
-
-            <TextInput
-                style={styles.input}
+        <AuthScreen title="Gilhuys Family Recipe Book" subtitle="Choose a new password">
+            <AuthInput
                 placeholder="New password"
                 value={password}
                 onChangeText={setPassword}
@@ -84,9 +69,7 @@ export default function PasswordChangeScreen() {
                 autoCapitalize="none"
                 autoComplete="new-password"
             />
-
-            <TextInput
-                style={styles.input}
+            <AuthInput
                 placeholder="Confirm new password"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -95,69 +78,13 @@ export default function PasswordChangeScreen() {
                 autoComplete="new-password"
             />
 
-            <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
+            <AuthButton
+                label="Change Password"
+                loadingLabel="Changing password..."
+                loading={loading}
                 onPress={handleChangePassword}
-                disabled={loading}
-            >
-                <Text style={styles.buttonText}>
-                    {loading ? "Changing password..." : "Change Password"}
-                </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => router.replace("/login")}>
-                <Text style={styles.link}>Back to log in</Text>
-            </TouchableOpacity>
-        </View>
+            />
+            <AuthLink label="Back to log in" onPress={() => router.replace("/login")} />
+        </AuthScreen>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        padding: 24,
-        backgroundColor: "#f5f5f5",
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: "bold",
-        textAlign: "center",
-        marginBottom: 8,
-    },
-    subtitle: {
-        fontSize: 16,
-        textAlign: "center",
-        marginBottom: 28,
-        color: "#555",
-    },
-    input: {
-        backgroundColor: "#fff",
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        padding: 14,
-        marginBottom: 14,
-        fontSize: 16,
-    },
-    button: {
-        backgroundColor: "#276749",
-        padding: 15,
-        borderRadius: 8,
-        alignItems: "center",
-    },
-    buttonDisabled: {
-        opacity: 0.6,
-    },
-    buttonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "bold",
-    },
-    link: {
-        textAlign: "center",
-        marginTop: 16,
-        color: "#276749",
-        fontWeight: "600",
-    },
-});

@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, Pressable } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { ActivityIndicator } from "react-native";
+import { useRouter } from "expo-router";
 import { confirmVerification } from "../services/auth";
+import { useTokenParam } from "../hooks/useTokenParam";
+import { AuthScreen, AuthButton } from "../components/AuthUI";
+
+const MESSAGES = {
+    loading: { title: "Verifying...", subtitle: "" },
+    success: { title: "Email verified", subtitle: "Your email has been verified!" },
+    error: {
+        title: "Verification failed",
+        subtitle: "This link is invalid or has expired.",
+    },
+};
 
 export default function Verify() {
-    const { token } = useLocalSearchParams();
+    const token = useTokenParam();
     const router = useRouter();
     const [status, setStatus] = useState("loading");
 
@@ -14,7 +25,7 @@ export default function Verify() {
             return;
         }
 
-        confirmVerification(String(token))
+        confirmVerification(token)
             .then(() => setStatus("success"))
             .catch((err) => {
                 console.error("Verification failed:", err.status, err.response);
@@ -22,17 +33,15 @@ export default function Verify() {
             });
     }, [token]);
 
-    return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24 }}>
-            {status === "loading" && <ActivityIndicator size="large" />}
-            {status === "success" && <Text>Your email has been verified!</Text>}
-            {status === "error" && <Text>This link is invalid or has expired.</Text>}
+    const { title, subtitle } = MESSAGES[status];
 
-            {status !== "loading" && (
-                <Pressable onPress={() => router.replace("/login")} style={{ marginTop: 16 }}>
-                    <Text>Go to login</Text>
-                </Pressable>
+    return (
+        <AuthScreen title={title} subtitle={subtitle}>
+            {status === "loading" ? (
+                <ActivityIndicator size="large" />
+            ) : (
+                <AuthButton label="Go to Log In" onPress={() => router.replace("/login")} />
             )}
-        </View>
+        </AuthScreen>
     );
 }
