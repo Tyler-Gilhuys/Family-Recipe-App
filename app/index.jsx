@@ -1,12 +1,11 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import pb, { authReady } from "../pocketbaseConfig";
 
 export default function Index() {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -19,8 +18,6 @@ export default function Index() {
       router.replace(
         pb.authStore.isValid ? "/recipe" : "/login"
       );
-
-      setReady(true);
     }
 
     redirect();

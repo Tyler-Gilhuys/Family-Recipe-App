@@ -29,7 +29,6 @@ export default function RecipeDetails() {
   const {
     theme,
     width: windowWidth,
-    isPhone,
   } = useAppTheme();
 
   const [recipe, setRecipe] = useState(null);

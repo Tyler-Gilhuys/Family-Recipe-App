@@ -6,7 +6,6 @@ import {
   Text,
   TextInput,
   Image,
-  Alert,
   ActivityIndicator,
   Pressable,
   ScrollView,
@@ -59,7 +58,6 @@ const AddRecipe = () => {
   const [comments, setComments] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [saving, setSaving] = useState(false);
 
 
   const handlePickImage = async () => {
@@ -131,7 +129,7 @@ const AddRecipe = () => {
       router.push("/");
     } catch (error) {
       console.error("handleSubmit error:", error);
-      describeError("Error", error?.message || "Unable to save this recipe.");
+      showMessage("Error", describeError(error));
     } finally {
       setLoading(false);
     }
@@ -339,13 +337,13 @@ const AddRecipe = () => {
 
       <Pressable
         onPress={() => router.back()}
-        disabled={saving}
+        disabled={loading}
         style={({ pressed }) => [
           styles.cancelButton,
           {
             backgroundColor: Colors.warning,
             borderColor: cardBorder,
-            opacity: pressed || saving ? 0.75 : 1,
+            opacity: pressed || loading ? 0.75 : 1,
           },
         ]}
       >

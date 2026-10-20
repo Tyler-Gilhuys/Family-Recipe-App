@@ -66,7 +66,7 @@ export default function ForgotPasswordScreen() {
 
             <TouchableOpacity onPress={() => router.replace("/signup")}>
                 <Text>
-                    "Don't have an account? Sign Up"
+                    &quot;Don&apos;t have an account? Sign Up&quot;
                 </Text>
             </TouchableOpacity>
         </View>

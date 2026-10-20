@@ -72,6 +72,8 @@ const Slide = forwardRef(
   )
 );
 
+Slide.displayName = "Slide";
+
 const Recipe = () => {
   const { theme, width: windowWidth, isPhone, isTablet } = useAppTheme();
   const [allRecipes, setAllRecipes] = useState([]);
@@ -205,7 +207,7 @@ const Recipe = () => {
                 fontSize: 16,
               }}
             >
-              No recipes found for "{searchQuery.trim()}".
+              No recipes found for &quot;{searchQuery.trim()}&quot;.
             </Text>
           ) : null
         }

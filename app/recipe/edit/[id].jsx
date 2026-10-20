@@ -114,7 +114,7 @@ export default function EditRecipe() {
     return () => {
       active = false;
     };
-  }, [recipeId]);
+  }, [recipeId, router]);
 
   const normalizeList = (text, type = "generic") => {
     if (!text) return [];
@@ -217,6 +217,13 @@ export default function EditRecipe() {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.centered, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.title} />
+      </View>
+    );
+  }
 
   return (
     <View

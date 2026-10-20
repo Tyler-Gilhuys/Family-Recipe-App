@@ -6,7 +6,7 @@ import {
   Image,
   Pressable,
 } from "react-native";
-import { useLocalSearchParams, Link, router } from "expo-router";
+import { useLocalSearchParams, router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useAppTheme } from "../../components/ThemedViews";
 import { Colors } from "../../constants/Colors";

@@ -7,8 +7,6 @@ import {
     ScrollView,
     TextInput,
     ActivityIndicator,
-    Alert,
-    Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import pb from "../../pocketbaseConfig";
@@ -255,7 +253,7 @@ export default function ProfileSettingsScreen() {
                                     { color: mutedText },
                                 ]}
                             >
-                                We'll send a confirmation link to the new address. Your email changes after you click it.
+                                We&apos;ll send a confirmation link to the new address. Your email changes after you click it.
                             </Text>
                         </View>
                     </View>
