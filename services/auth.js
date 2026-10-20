@@ -1,51 +1,9 @@
 import pb from "../pocketbaseConfig";
 
-export async function login(email, password) {
-  try {
-    const authData = await pb.collection("users").authWithPassword(
-      email,
-      password
-    );
+const users = () => pb.collection("users");
 
-    if (!authData.record.verified) {
-      pb.authStore.clear();
-      const err = new Error("Please verify your email before logging in.");
-      err.code = "EMAIL_NOT_VERIFIED";
-      throw err;
-    }
-
-    console.log("PocketBase login successful:", authData.record.id);
-    return authData.record;
-  } catch (error) {
-    console.error("PocketBase login error:", error);
-    throw error;
-  }
-}
-
-export async function signUp(email, password, fullName) {
-  try {
-    const userData = {
-      email: email,
-      password: password,
-      passwordConfirm: password,
-      name: fullName,
-    };
-
-    const newUser = await pb.collection("users").create(userData);
-
-    console.log("PocketBase sign-up successful:", newUser.id);
-
-    await pb.collection("users").requestVerification(email);
-
-    return newUser;
-  } catch (error) {
-    console.error("PocketBase sign-up error:", error);
-    throw error;
-  }
-}
-
-export function logout() {
-  pb.authStore.clear();
+export function isVerifiedUser() {
+  return pb.authStore.isValid && pb.authStore.record?.verified === true;
 }
 
 export function isLoggedIn() {
@@ -56,8 +14,53 @@ export function getCurrentUser() {
   return pb.authStore.record;
 }
 
-export function isVerifiedUser() {
-  return pb.authStore.isValid && pb.authStore.record?.verified === true;
+export function logout() {
+  pb.authStore.clear();
+}
+
+export async function refreshSession() {
+  await users().authRefresh();
+}
+
+export async function login(email, password) {
+  const authData = await users().authWithPassword(email, password);
+
+  if (!authData.record.verified) {
+    pb.authStore.clear();
+    const err = new Error("Please verify your email before logging in.");
+    err.code = "EMAIL_NOT_VERIFIED";
+    throw err;
+  }
+
+  return authData.record;
+}
+
+export async function signUp(email, password, fullName) {
+  const newUser = await users().create({
+    email,
+    password,
+    passwordConfirm: password,
+    name: fullName,
+  });
+
+  await users().requestVerification(email);
+  return newUser;
+}
+
+export async function resendVerification(email) {
+  await users().requestVerification(email);
+}
+
+export async function confirmVerification(token) {
+  await users().confirmVerification(token);
+}
+
+export async function requestPasswordReset(email) {
+  await users().requestPasswordReset(email);
+}
+
+export async function resetPassword(token, newPassword) {
+  await users().confirmPasswordReset(token, newPassword, newPassword);
 }
 
 export async function updatePassword(newPassword, oldPassword) {
@@ -65,52 +68,32 @@ export async function updatePassword(newPassword, oldPassword) {
     throw new Error("User is not logged in.");
   }
 
-  const userId = pb.authStore.record.id;
-  const email = pb.authStore.record.email;
+  const { id, email } = pb.authStore.record;
 
-  try {
-    const result = await pb.collection("users").update(userId, {
-      oldPassword: oldPassword,
-      password: newPassword,
-      passwordConfirm: newPassword,
-    });
+  const result = await users().update(id, {
+    oldPassword,
+    password: newPassword,
+    passwordConfirm: newPassword,
+  });
 
-    // The old token is now invalid. Log in again with the new password
-    // to get a fresh one.
-    await pb.collection("users").authWithPassword(email, newPassword);
+  // The old token is now invalid. Log in again to get a fresh one.
+  await users().authWithPassword(email, newPassword);
 
-    return result;
-  } catch (error) {
-    console.error("Error updating password:", error);
-    throw error;
-  }
+  return result;
 }
-
 
 export async function updateEmail(newEmail) {
   if (!pb.authStore.isValid) {
     throw new Error("User is not logged in.");
   }
 
-  try {
-    // Sends a confirmation email to newEmail. The change is not applied yet.
-    await pb.collection("users").requestEmailChange(newEmail);
-    return { pending: true };
-  } catch (error) {
-    console.error("Error requesting email change:", error);
-    throw error;
-  }
+  // Sends a confirmation email to newEmail. The change isn't applied yet.
+  await users().requestEmailChange(newEmail);
+  return { pending: true };
 }
 
-export async function resetPassword(token, newPassword) {
-  try {
-    await pb.collection("users").confirmPasswordReset(
-      token,
-      newPassword,
-      newPassword
-    );
-  } catch (error) {
-    console.error("Error confirming password reset:", error);
-    throw error;
-  }
+export async function confirmEmailChange(token, password) {
+  await users().confirmEmailChange(token, password);
+  // PocketBase invalidates the session after an email change.
+  pb.authStore.clear();
 }

@@ -7,8 +7,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
-import { login } from "../services/auth";
-import pb from "../pocketbaseConfig";
+import { login, resendVerification } from "../services/auth";
 import { showMessage, describeError } from "../utils/showMessage";
 
 export default function LoginScreen() {
@@ -102,12 +101,10 @@ export default function LoginScreen() {
           <TouchableOpacity
             onPress={async () => {
               try {
-                await pb.collection("users").requestVerification(email.trim());
+                await resendVerification(email.trim());
                 setResendStatus("Verification email sent.");
               } catch (e) {
-                setResendStatus(
-                  "Could not send: " + (e.response?.message ?? e.message)
-                );
+                setResendStatus("Could not send: " + describeError(e));
               }
             }}
           >

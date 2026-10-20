@@ -7,7 +7,7 @@ import pb, { authReady } from "../pocketbaseConfig";
 import ThemedViews from "../components/ThemedViews";
 import { RecipeSearchProvider, useRecipeSearch } from "../contexts/RecipeSearchContext";
 import { HEADER_COMPACT_WIDTH } from "../constants/layout";
-import { isVerifiedUser } from "../services/auth";
+import { isVerifiedUser, refreshSession } from "../services/auth";
 
 const RecipeSearchHeader = ({ theme }) => {
   const { searchQuery, setSearchQuery } = useRecipeSearch();
@@ -83,7 +83,7 @@ const RootLayout = () => {
 
       try {
         if (pb.authStore.isValid)
-          await pb.collection("users").authRefresh();
+          await refreshSession();
       } catch {
         pb.authStore.clear();
       }

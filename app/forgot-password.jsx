@@ -7,7 +7,7 @@ import {
     View,
 } from "react-native";
 import { router } from "expo-router";
-import pb from "../pocketbaseConfig";
+import { requestPasswordReset } from "../services/auth";
 import { showMessage, describeError } from "../utils/showMessage";
 
 export default function ForgotPasswordScreen() {
@@ -22,7 +22,7 @@ export default function ForgotPasswordScreen() {
 
         try {
             setLoading(true);
-            await pb.collection("users").requestPasswordReset(email.trim());
+            await requestPasswordReset(email.trim());
             showMessage(
                 "Reset link sent",
                 "Check your email for a password reset link."

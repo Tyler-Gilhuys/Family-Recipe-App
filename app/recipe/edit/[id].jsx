@@ -17,8 +17,7 @@ import { useAppTheme } from "../../../components/ThemedViews";
 import { Colors } from "../../../constants/Colors";
 import pb from "../../../pocketbaseConfig";
 import { pickImage } from "../../../utils/ImagePicker";
-import { updateRecipe } from "../../../services/recipes";
-import { uploadRecipeImage } from "../../../services/recipeImages";
+import { updateRecipe, uploadRecipeImage } from "../../../services/recipes";
 import { CATEGORIES } from "../../../constants/categories";
 
 export default function EditRecipe() {
@@ -148,12 +147,8 @@ export default function EditRecipe() {
       return;
     }
 
-    console.log("Saving recipe changes for ID:", recipeId);
-
     try {
       setSaving(true);
-
-      console.log("Starting recipe update:", recipeId);
 
       const recipeData = {
         title: recipeName.trim(),
@@ -165,13 +160,9 @@ export default function EditRecipe() {
 
       await updateRecipe(recipeId, recipeData);
 
-      console.log("Recipe updated; checking image.");
-
       if (imageUri) {
         await uploadRecipeImage(imageUri, recipeId);
       }
-
-      console.log("Save complete; navigating back.");
 
       // Navigate independently of any alert.
       router.back();

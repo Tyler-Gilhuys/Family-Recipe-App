@@ -14,8 +14,7 @@ import { useRouter } from "expo-router";
 import { useAppTheme } from "../components/ThemedViews";
 import { Colors } from "../constants/Colors";
 import { pickImage } from "../utils/ImagePicker";
-import { createRecipe } from "../services/recipes";
-import { uploadRecipeImage } from "../services/recipeImages";
+import { createRecipe, uploadRecipeImage } from "../services/recipes";
 import { showMessage, describeError } from "../utils/showMessage";
 import { CATEGORIES } from "../constants/categories";
 
