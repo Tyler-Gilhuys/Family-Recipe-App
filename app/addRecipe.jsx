@@ -1,17 +1,14 @@
 import { useRouter } from "expo-router";
 import RecipeForm from "../components/RecipeForm";
-import { createRecipe, uploadRecipeImage } from "../services/recipes";
+import { createRecipe } from "../services/recipes";
 import { showMessage } from "../utils/showMessage";
+
 
 export default function AddRecipe() {
   const router = useRouter();
 
   const handleSubmit = async ({ recipe, imageUri }) => {
-    const recipeId = await createRecipe(recipe);
-
-    if (imageUri) {
-      await uploadRecipeImage(imageUri, recipeId);
-    }
+    await createRecipe(recipe, imageUri);
 
     showMessage("Success", "Recipe saved successfully!");
     router.replace("/recipe");

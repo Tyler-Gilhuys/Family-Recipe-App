@@ -10,29 +10,57 @@ function requireUser(action) {
   return user;
 }
 
-export async function createRecipe(recipe) {
+// Builds a multipart body so the text fields and the image travel together.
+// ingredients, steps, and categories are JSON fields, so they go as JSON strings.
+async function buildRecipeFormData(recipe, imageUri) {
+  const response = await fetch(imageUri);
+
+  if (!response.ok) {
+    throw new Error(`Could not read image: HTTP ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  const formData = new FormData();
+
+  formData.append("title", recipe.title);
+  formData.append("comments", recipe.comments ?? "");
+  formData.append("ingredients", JSON.stringify(recipe.ingredients ?? []));
+  formData.append("steps", JSON.stringify(recipe.steps ?? []));
+  formData.append("categories", JSON.stringify(recipe.categories ?? []));
+  formData.append("image", blob, "recipe.jpg");
+
+  return formData;
+}
+
+export async function createRecipe(recipe, imageUri = null) {
   if (!recipe) {
     throw new Error("No recipe data provided");
   }
 
   const user = requireUser("save a recipe");
 
-  const record = await pb.collection("recipes").create({
-    ...recipe,
-    author: user.id,
-  });
+  let data;
+  if (imageUri) {
+    data = await buildRecipeFormData(recipe, imageUri);
+    data.append("author", user.id);
+  } else {
+    data = { ...recipe, author: user.id };
+  }
 
+  const record = await pb.collection("recipes").create(data);
   return record.id;
 }
 
-export async function updateRecipe(recipeId, recipe) {
+export async function updateRecipe(recipeId, recipe, imageUri = null) {
   if (!recipeId || !recipe) {
     throw new Error("Recipe ID and recipe data are required.");
   }
 
   requireUser("edit a recipe");
 
-  return pb.collection("recipes").update(recipeId, recipe);
+  const data = imageUri ? await buildRecipeFormData(recipe, imageUri) : recipe;
+
+  return pb.collection("recipes").update(recipeId, data);
 }
 
 export async function deleteRecipe(recipeId) {
@@ -44,29 +72,6 @@ export async function deleteRecipe(recipeId) {
 
   await pb.collection("recipes").delete(recipeId);
   return true;
-}
-
-/**
- * Uploads a recipe image to the image field of an existing recipe.
- */
-export async function uploadRecipeImage(uri, recipeId) {
-  if (!uri || !recipeId) {
-    throw new Error("An image URI and recipe ID are required.");
-  }
-
-  requireUser("upload an image");
-
-  const response = await fetch(uri);
-
-  if (!response.ok) {
-    throw new Error(`Could not read image: HTTP ${response.status}`);
-  }
-
-  const blob = await response.blob();
-  const formData = new FormData();
-  formData.append("image", blob, `recipe-${recipeId}.jpg`);
-
-  return pb.collection("recipes").update(recipeId, formData);
 }
 
 export async function getComments(recipeId) {

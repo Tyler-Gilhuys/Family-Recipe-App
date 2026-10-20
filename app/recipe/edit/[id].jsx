@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAppTheme } from "../../../components/ThemedViews";
 import RecipeForm from "../../../components/RecipeForm";
 import pb from "../../../pocketbaseConfig";
-import { updateRecipe, uploadRecipeImage } from "../../../services/recipes";
+import { updateRecipe } from "../../../services/recipes";
 import { showMessage, describeError } from "../../../utils/showMessage";
 
 export default function EditRecipe() {
@@ -55,12 +55,7 @@ export default function EditRecipe() {
   }, [recipeId, router]);
 
   const handleSave = async ({ recipe, imageUri }) => {
-    await updateRecipe(recipeId, recipe);
-
-    if (imageUri) {
-      await uploadRecipeImage(imageUri, recipeId);
-    }
-
+    await updateRecipe(recipeId, recipe, imageUri);
     router.back();
   };
 
