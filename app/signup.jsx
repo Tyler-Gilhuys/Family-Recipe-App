@@ -11,9 +11,10 @@ export default function SignUpScreen() {
     const [fullName, setFullName] = useState("");
     const [loading, setLoading] = useState(false);
     const [signedUp, setSignedUp] = useState(false);
+    const [inviteCode, setInviteCode] = useState("");
 
     async function handleSignUp() {
-        if (!email.trim() || !password || !confirmPassword || !fullName.trim()) {
+        if (!email.trim() || !password || !confirmPassword || !fullName.trim() || !inviteCode.trim()) {
             showMessage("Missing information", "Fill in all fields.");
             return;
         }
@@ -25,8 +26,7 @@ export default function SignUpScreen() {
 
         try {
             setLoading(true);
-            await signUp(email.trim(), password, fullName.trim());
-            setSignedUp(true);
+            await signUp(email.trim(), password, fullName.trim(), inviteCode.trim()); setSignedUp(true);
         } catch (error) {
             console.error("Sign up error:", error);
             showMessage("Sign up failed", describeError(error));
@@ -74,6 +74,13 @@ export default function SignUpScreen() {
                 placeholder="Full Name"
                 value={fullName}
                 onChangeText={setFullName}
+            />
+
+            <AuthInput
+                placeholder="Family invite code"
+                value={inviteCode}
+                onChangeText={setInviteCode}
+                autoCapitalize="none"
             />
 
             <AuthButton

@@ -35,12 +35,13 @@ export async function login(email, password) {
   return authData.record;
 }
 
-export async function signUp(email, password, fullName) {
+export async function signUp(email, password, fullName, inviteCode) {
   const newUser = await users().create({
     email,
     password,
     passwordConfirm: password,
     name: fullName,
+    inviteCode,
   });
 
   await users().requestVerification(email);
