@@ -13,8 +13,14 @@ const authStore = new AsyncAuthStore({
     initial: initialAuth,
 });
 
-const POCKETBASE_URL =
+const configuredUrl =
     process.env.EXPO_PUBLIC_POCKETBASE_URL || "http://192.168.1.14:8090";
+
+// "same-origin" lets one web build work at both the Tailscale and LAN addresses.
+const POCKETBASE_URL =
+    configuredUrl === "same-origin" && typeof window !== "undefined"
+        ? window.location.origin
+        : configuredUrl;
 
 const pb = new PocketBase(POCKETBASE_URL, authStore);
 
