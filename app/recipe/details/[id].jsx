@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Pressable,
   TextInput,
+  Platform,
 } from "react-native";
 import {
   useLocalSearchParams,
@@ -20,6 +21,8 @@ import { useAppTheme } from "../../../components/ThemedViews";
 import { Colors } from "../../../constants/Colors";
 import { deleteRecipe, getComments, addComment, deleteComment } from "../../../services/recipes";
 import { showMessage, describeError, confirmAction } from "../../../utils/showMessage";
+import { printRecipes } from "../../../utils/recipePrint";
+
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
@@ -137,6 +140,26 @@ export default function RecipeDetails() {
     }
   }
 
+  const handleSavePdf = () => {
+    try {
+      printRecipes(
+        [
+          {
+            title: recipe.title,
+            authorName: recipe.expand?.author?.name,
+            imageUrl: recipe.image ? pb.files.getURL(recipe, recipe.image) : null,
+            ingredients: recipe.ingredients,
+            steps: recipe.steps,
+            comments: recipe.comments,
+          },
+        ],
+        { title: recipe.title }
+      );
+    } catch (error) {
+      showMessage("Could not create PDF", describeError(error));
+    }
+  };
+
   if (loading) {
     return (
       <View
@@ -223,6 +246,27 @@ export default function RecipeDetails() {
           <Text style={{ color: theme.text, textAlign: "center", marginTop: -12, marginBottom: 20 }}>
             By {recipe.expand?.author?.name || "Unknown Author"}
           </Text>
+
+          {Platform.OS === "web" && (
+            <Pressable
+              onPress={handleSavePdf}
+              style={({ pressed }) => ({
+                alignSelf: "center",
+                paddingHorizontal: 18,
+                paddingVertical: 10,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: cardBorder,
+                backgroundColor: cardBackground,
+                marginBottom: 20,
+                opacity: pressed ? 0.8 : 1,
+              })}
+            >
+              <Text style={{ color: cardText, fontWeight: "600" }}>
+                Save as PDF
+              </Text>
+            </Pressable>
+          )}
 
           {recipe.comments ? (
             <View
