@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useColorScheme, View, ActivityIndicator, Pressable, Text, TextInput, useWindowDimensions, } from "react-native";
+import { useColorScheme, View, ActivityIndicator, Pressable, Text, TextInput, useWindowDimensions, Platform } from "react-native";
 import { Stack, useRouter, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { Colors } from "../constants/Colors";
@@ -9,12 +9,14 @@ import { RecipeSearchProvider, useRecipeSearch } from "../contexts/RecipeSearchC
 import { HEADER_COMPACT_WIDTH } from "../constants/layout";
 import { isVerifiedUser, refreshSession } from "../services/auth";
 
+
+
 const RecipeSearchHeader = ({ theme }) => {
   const { searchQuery, setSearchQuery } = useRecipeSearch();
   const { width } = useWindowDimensions();
 
   // Reserve room on both sides for the title (left) and the nav links (right).
-  const sideReserve = 280;
+  const sideReserve = 340;
   const searchWidth = Math.max(160, Math.min(420, width - sideReserve * 2));
 
   return (
@@ -180,6 +182,14 @@ const RootLayout = () => {
                   </Text>
                 </Pressable>
 
+                {Platform.OS === "web" && (
+                  <Pressable onPress={() => router.push("/book")}>
+                    <Text style={{ color: theme.title, fontWeight: "600" }}>
+                      {isNarrow ? "Book" : "Make a Book"}
+                    </Text>
+                  </Pressable>
+                )}
+
                 <Pressable onPress={() => router.push("/profile")}>
                   <Text style={{ color: theme.title, fontWeight: "600" }}>
                     Profile
@@ -288,6 +298,11 @@ const RootLayout = () => {
           <Stack.Screen
             name="profile/editprofile"
             options={{ title: "Edit Profile", headerBackVisible: true }}
+          />
+
+          <Stack.Screen
+            name="book"
+            options={{ title: "Make a Book", headerBackVisible: true }}
           />
         </Stack>
 

@@ -97,3 +97,13 @@ export async function deleteComment(commentId) {
   requireUser("delete a comment");
   return pb.collection("recipe_comments").delete(commentId);
 }
+
+export async function getRecipesForBook() {
+  requireUser("view recipes");
+
+  return pb.collection("recipes").getFullList({
+    sort: "title",
+    expand: "author",
+    requestKey: null,
+  });
+}
