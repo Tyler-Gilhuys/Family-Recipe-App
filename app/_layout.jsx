@@ -7,7 +7,8 @@ import pb, { authReady } from "../pocketbaseConfig";
 import ThemedViews from "../components/ThemedViews";
 import { RecipeSearchProvider, useRecipeSearch } from "../contexts/RecipeSearchContext";
 import { HEADER_COMPACT_WIDTH } from "../constants/layout";
-import { isVerifiedUser, refreshSession } from "../services/auth";
+import { isVerifiedUser, refreshSession, getCurrentUser } from "../services/auth";
+import Avatar from "../components/Avatar";
 
 
 
@@ -69,6 +70,7 @@ const RootLayout = () => {
 
   const [ready, setReady] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -92,6 +94,7 @@ const RootLayout = () => {
 
       if (mounted) {
         setAuthenticated(isVerifiedUser());
+        setCurrentUser(isVerifiedUser() ? getCurrentUser() : null);
         setReady(true);
       }
     }
@@ -99,7 +102,9 @@ const RootLayout = () => {
     initializeAuth();
 
     const unsubscribe = pb.authStore.onChange(() => {
-      setAuthenticated(isVerifiedUser());
+      const verified = isVerifiedUser();
+      setAuthenticated(verified);
+      setCurrentUser(verified ? getCurrentUser() : null);
     });
 
     return () => {
@@ -191,9 +196,7 @@ const RootLayout = () => {
                 )}
 
                 <Pressable onPress={() => router.push("/profile")}>
-                  <Text style={{ color: theme.title, fontWeight: "600" }}>
-                    Profile
-                  </Text>
+                  <Avatar user={currentUser} size={32} />
                 </Pressable>
               </View>
             ),
