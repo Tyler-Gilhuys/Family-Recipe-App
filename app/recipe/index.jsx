@@ -1,24 +1,37 @@
 import {
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { Link } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Link, useRouter } from "expo-router";
 import { useAppTheme } from "../../components/ThemedViews";
 import RecipeCard from "../../components/RecipeCard";
+import ViewAllCard from "../../components/ViewAllCard";
+import { SkeletonRow } from "../../components/Skeleton";
+import EmptyState from "../../components/EmptyState";
 import { useRecipes } from "../../hooks/useRecipes";
 import { CATEGORIES } from "../../constants/categories";
 import { useRecipeSearch } from "../../contexts/RecipeSearchContext";
 
+const SERIF = Platform.select({
+  web: "Georgia, 'Iowan Old Style', 'Times New Roman', serif",
+  ios: "Georgia",
+  android: "serif",
+  default: "serif",
+});
+
 const PREVIEW_COUNT = 4;
 
 const Recipe = () => {
-  const { theme, width: windowWidth, isPhone, isTablet, isCompact } =
+  const router = useRouter();
+  const { theme, card, width: windowWidth, isPhone, isTablet, isCompact, isDesktop } =
     useAppTheme();
-  const { recipes: allRecipes } = useRecipes();
+  const { recipes: allRecipes, loading } = useRecipes();
   const { searchQuery, setSearchQuery } = useRecipeSearch();
 
   const cardWidth = isPhone
@@ -37,18 +50,17 @@ const Recipe = () => {
       recipe.categories.includes(key)
     );
 
-    // While searching, keep only matching recipes.
     const filtered = isSearching
       ? inCategory.filter((recipe) =>
         (recipe.title ?? "").toLowerCase().includes(query)
       )
       : inCategory;
 
-    // Normal view: first few + "View All". Search view: show every match.
     const preview = isSearching ? filtered : filtered.slice(0, PREVIEW_COUNT);
 
     return {
       key,
+      total: filtered.length,
       recipes: [
         ...preview,
         ...(!isSearching && filtered.length > PREVIEW_COUNT
@@ -57,8 +69,8 @@ const Recipe = () => {
       ],
     };
   })
-    // Hide categories with no matches while searching.
-    .filter((category) => !isSearching || category.recipes.length > 0);
+    // Hide categories with nothing in them, in every view, not just search.
+    .filter((category) => category.recipes.length > 0);
 
   return (
     <View style={{ flex: 1 }}>
@@ -68,20 +80,26 @@ const Recipe = () => {
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search recipes..."
-            placeholderTextColor={theme.iconColor}
+            placeholderTextColor={card.muted}
             returnKeyType="search"
             accessibilityLabel="Search recipes"
             style={{
-              backgroundColor: theme.background,
+              backgroundColor: card.background,
               color: theme.text,
               borderRadius: 8,
               paddingHorizontal: 12,
               paddingVertical: 10,
               fontSize: 15,
               borderWidth: 1,
-              borderColor: theme.iconColor,
+              borderColor: card.border,
             }}
           />
+        </View>
+      )}
+
+      {loading && allRecipes.length === 0 && (
+        <View style={{ paddingTop: 10 }}>
+          <SkeletonRow count={isPhone ? 2 : 4} width={cardWidth} />
         </View>
       )}
 
@@ -89,69 +107,96 @@ const Recipe = () => {
         data={categories}
         keyExtractor={(item) => item.key}
         ListEmptyComponent={
-          isSearching ? (
-            <Text
-              style={{
-                color: theme.text,
-                textAlign: "center",
-                padding: 24,
-                fontSize: 16,
-              }}
-            >
-              No recipes found for &quot;{searchQuery.trim()}&quot;.
-            </Text>
+          !loading && isSearching ? (
+            <EmptyState
+              icon="search-outline"
+              title="No recipes found"
+              message={`Nothing matches "${searchQuery.trim()}".`}
+            />
+          ) : !loading && allRecipes.length === 0 ? (
+            <EmptyState
+              icon="restaurant-outline"
+              title="No recipes yet"
+              message="Add the first family recipe to get started."
+              actionLabel="Add a recipe"
+              onAction={() => router.push("/addRecipe")}
+            />
           ) : null
         }
         renderItem={({ item }) => (
-          <View>
+          <View style={styles.section}>
             <Link href={`/recipe/${encodeURIComponent(item.key)}`} asChild>
-              <Pressable
-                style={styles.categoryHeader}
-                accessibilityRole="button"
-                accessibilityLabel={`View all ${item.key} recipes`}
-              >
-                <Text style={[styles.categoryTitle, { color: theme.text }]}>
+              <Pressable style={styles.categoryHeader}>
+                <Text
+                  style={[
+                    styles.categoryTitle,
+                    { color: theme.text, fontFamily: SERIF },
+                  ]}
+                >
                   {item.key}
                 </Text>
+
+                <View style={styles.seeAll}>
+                  <Text style={[styles.seeAllText, { color: card.accent }]}>
+                    See all
+                  </Text>
+                  <Ionicons name="chevron-forward" size={15} color={card.accent} />
+                </View>
               </Pressable>
             </Link>
 
-            <FlatList
-              data={item.recipes}
-              renderItem={({ item: recipe }) => {
-                if (recipe.type === "viewAll") {
-                  return (
+            <View style={[styles.divider, { backgroundColor: card.border }]} />
+
+            {isDesktop ? (
+              <View style={styles.grid}>
+                {item.recipes.map((recipe) =>
+                  recipe.type === "viewAll" ? (
                     <Link
+                      key={recipe.id}
                       href={`/recipe/${encodeURIComponent(recipe.category)}`}
                       asChild
                     >
-                      <Pressable
-                        style={StyleSheet.flatten([
-                          styles.viewAllCard,
-                        ])}
+                      <ViewAllCard cardWidth={cardWidth} />
+                    </Link>
+                  ) : (
+                    <Link key={recipe.id} href={`/recipe/details/${recipe.id}`} asChild>
+                      <RecipeCard recipe={recipe} cardWidth={cardWidth} imageWidth={imageWidth} />
+                    </Link>
+                  )
+                )}
+              </View>
+            ) : (
+              <FlatList
+                data={item.recipes}
+                renderItem={({ item: recipe }) => {
+                  if (recipe.type === "viewAll") {
+                    return (
+                      <Link
+                        href={`/recipe/${encodeURIComponent(recipe.category)}`}
+                        asChild
                       >
-                        <Text style={styles.viewAllText}>View All</Text>
-                      </Pressable>
+                        <ViewAllCard cardWidth={cardWidth} />
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <Link href={`/recipe/details/${recipe.id}`} asChild>
+                      <RecipeCard
+                        recipe={recipe}
+                        cardWidth={cardWidth}
+                        imageWidth={imageWidth}
+                      />
                     </Link>
                   );
-                }
-
-                return (
-                  <Link href={`/recipe/details/${recipe.id}`} asChild>
-                    <RecipeCard
-                      recipe={recipe}
-                      cardWidth={cardWidth}
-                      imageWidth={imageWidth}
-                    />
-                  </Link>
-                );
-              }}
-              keyExtractor={(recipe) => recipe.id}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.carouselContainer}
-            />
+                }}
+                keyExtractor={(recipe) => recipe.id}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.carouselContainer}
+              />
+            )}
           </View>
         )}
       />
@@ -162,6 +207,9 @@ const Recipe = () => {
 export default Recipe;
 
 const styles = StyleSheet.create({
+  section: {
+    marginBottom: 22,
+  },
   carouselContainer: {
     paddingHorizontal: 10,
   },
@@ -169,30 +217,32 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   categoryTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 20,
+    fontWeight: "700",
   },
-  viewAllCard: {
-    marginHorizontal: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 5,
-    justifyContent: "center",
+  seeAll: {
+    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#565555",
+    gap: 2,
   },
-  viewAllText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
+  seeAllText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  divider: {
+    height: 1,
+    marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 10,
+    gap: 4,
   },
 });

@@ -1,17 +1,18 @@
 import { forwardRef } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import PressableScale from "./PressableScale";
 import { useAppTheme } from "./ThemedViews";
 
-// forwardRef is required so <Link asChild> can attach to the Pressable.
 const RecipeCard = forwardRef(
     (
         { recipe, cardWidth, imageWidth, imageHeight = 120, large = false, ...props },
         ref
     ) => {
-        const { card } = useAppTheme();
+        const { theme, card } = useAppTheme();
 
         return (
-            <Pressable
+            <PressableScale
                 ref={ref}
                 {...props}
                 style={({ pressed }) =>
@@ -37,11 +38,18 @@ const RecipeCard = forwardRef(
                     <View
                         style={[
                             styles.noImage,
-                            { width: imageWidth, height: imageHeight },
+                            {
+                                width: imageWidth,
+                                height: imageHeight,
+                                backgroundColor: theme.background,
+                                borderColor: card.border,
+                            },
                         ]}
                     >
-                        <Text style={styles.noImageIcon}>🍽</Text>
-                        <Text style={styles.noImageText}>No photo yet</Text>
+                        <Ionicons name="restaurant-outline" size={22} color={card.muted} />
+                        <Text style={[styles.noImageText, { color: card.muted }]}>
+                            No photo yet
+                        </Text>
                     </View>
                 )}
 
@@ -51,7 +59,7 @@ const RecipeCard = forwardRef(
                 >
                     {recipe.title}
                 </Text>
-            </Pressable>
+            </PressableScale>
         );
     }
 );
@@ -86,15 +94,14 @@ const styles = StyleSheet.create({
     },
     noImage: {
         borderRadius: 8,
+        borderWidth: 1,
+        borderStyle: "dashed",
         marginBottom: 10,
-        backgroundColor: "#F0EDE7",
         alignItems: "center",
         justifyContent: "center",
-        borderWidth: 1,
-        borderColor: "#E2DDD3",
+        gap: 4,
     },
-    noImageIcon: { fontSize: 32, marginBottom: 6 },
-    noImageText: { fontSize: 11, color: "#81796D", fontWeight: "500" },
+    noImageText: { fontSize: 11, fontWeight: "500" },
     name: { fontSize: 16, fontWeight: "bold", textAlign: "center" },
     nameLarge: { fontSize: 18 },
 });

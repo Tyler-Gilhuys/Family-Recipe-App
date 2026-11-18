@@ -9,8 +9,9 @@ import { RecipeSearchProvider, useRecipeSearch } from "../contexts/RecipeSearchC
 import { HEADER_COMPACT_WIDTH } from "../constants/layout";
 import { isVerifiedUser, refreshSession, getCurrentUser } from "../services/auth";
 import Avatar from "../components/Avatar";
-
-
+import { ToastProvider } from "../components/Toast";
+import { ConfirmProvider } from "../components/ConfirmModal";
+import Wordmark from "../components/Wordmark";
 
 const RecipeSearchHeader = ({ theme }) => {
   const { searchQuery, setSearchQuery } = useRecipeSearch();
@@ -148,167 +149,165 @@ const RootLayout = () => {
   return (
     <RecipeSearchProvider>
       <ThemedViews>
-        <StatusBar style="auto" />
+        <ToastProvider>
+          <ConfirmProvider>
+            <StatusBar style="auto" />
 
-        <Stack
-          screenOptions={{
-            contentStyle: {
-              backgroundColor: theme.background,
-            },
-            headerStyle: {
-              backgroundColor: theme.navBackground,
-            },
-            headerTintColor: theme.title,
-            headerTitleStyle: {
-              fontSize: 18,
-            },
-            headerRightContainerStyle: {
-              paddingRight: 12,
-            },
-            headerLeft: () => null,
-            headerRight: () => (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: isNarrow ? 10 : 16,
-                  marginRight: 8,
+            <Stack
+              screenOptions={{
+                animation: "fade",
+                contentStyle: {
+                  backgroundColor: theme.background,
+                },
+                headerStyle: {
+                  backgroundColor: theme.navBackground,
+                },
+                headerTintColor: theme.title,
+                headerTitleStyle: {
+                  fontSize: 18,
+                },
+                headerRightContainerStyle: {
+                  paddingRight: 12,
+                },
+                headerLeft: () => null,
+                headerRight: () => (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: isNarrow ? 10 : 16,
+                      marginRight: 8,
+                    }}
+                  >
+                    <Pressable onPress={() => router.push("/recipe")}>
+                      <Text style={{ color: theme.title, fontWeight: "600" }}>
+                        Home
+                      </Text>
+                    </Pressable>
+
+                    <Pressable onPress={() => router.push("/addRecipe")}>
+                      <Text style={{ color: theme.title, fontWeight: "600" }}>
+                        Add Recipe
+                      </Text>
+                    </Pressable>
+
+                    {Platform.OS === "web" && (
+                      <Pressable onPress={() => router.push("/book")}>
+                        <Text style={{ color: theme.title, fontWeight: "600" }}>
+                          {isNarrow ? "Book" : "Make a Book"}
+                        </Text>
+                      </Pressable>
+                    )}
+
+                    <Pressable onPress={() => router.push("/profile")}>
+                      <Avatar user={currentUser} size={32} />
+                    </Pressable>
+                  </View>
+                ),
+              }}
+            >
+              <Stack.Screen
+                name="index"
+                options={{ title: "Home", headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="login"
+                options={{ title: "Login", headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="signup"
+                options={{ title: "Sign Up", headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="forgot-password"
+                options={{ title: "Forgot Password", headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="verify"
+                options={{ title: "Verify Email", headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="confirm-email"
+                options={{ title: "Confirm Email", headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="password-change"
+                options={{ title: "Change Password", headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="recipe/index"
+                options={{
+                  title: "Family Recipes",
+                  headerBackVisible: true,
+
+                  // Title back in the top left
+                  headerLeft: () => (
+                    <View style={{ marginLeft: 16 }}>
+                      <Wordmark size="small" />
+                    </View>
+                  ),
+
+                  headerTitle: isNarrow
+                    ? () => null
+                    : () => <RecipeSearchHeader theme={theme} />,
+
+                  headerTitleContainerStyle: {
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    pointerEvents: "box-none", // lets taps pass through to Home/Add/Profile
+                  },
                 }}
-              >
-                <Pressable onPress={() => router.push("/recipe")}>
-                  <Text style={{ color: theme.title, fontWeight: "600" }}>
-                    Home
-                  </Text>
-                </Pressable>
+              />
 
-                <Pressable onPress={() => router.push("/addRecipe")}>
-                  <Text style={{ color: theme.title, fontWeight: "600" }}>
-                    Add Recipe
-                  </Text>
-                </Pressable>
+              <Stack.Screen
+                name="profile"
+                options={{ title: "Profile", headerBackVisible: true }}
+              />
+              <Stack.Screen
+                name="recipe/details/[id]"
+                options={{ title: "Recipe Details", headerBackVisible: true }}
+              />
 
-                {Platform.OS === "web" && (
-                  <Pressable onPress={() => router.push("/book")}>
-                    <Text style={{ color: theme.title, fontWeight: "600" }}>
-                      {isNarrow ? "Book" : "Make a Book"}
-                    </Text>
-                  </Pressable>
-                )}
+              <Stack.Screen
+                name="recipe/[category]"
+                options={{ title: "Category", headerBackVisible: true }}
+              />
 
-                <Pressable onPress={() => router.push("/profile")}>
-                  <Avatar user={currentUser} size={32} />
-                </Pressable>
-              </View>
-            ),
-          }}
-        >
-          <Stack.Screen
-            name="index"
-            options={{ title: "Home", headerShown: false }}
-          />
+              <Stack.Screen
+                name="addRecipe"
+                options={{ title: "Add Recipe", headerBackVisible: true }}
+              />
 
-          <Stack.Screen
-            name="login"
-            options={{ title: "Login", headerShown: false }}
-          />
+              <Stack.Screen
+                name="recipe/edit/[id]"
+                options={{ title: "Edit Recipe", headerBackVisible: true }}
+              />
 
-          <Stack.Screen
-            name="signup"
-            options={{ title: "Sign Up", headerShown: false }}
-          />
+              <Stack.Screen
+                name="profile/editprofile"
+                options={{ title: "Edit Profile", headerBackVisible: true }}
+              />
 
-          <Stack.Screen
-            name="forgot-password"
-            options={{ title: "Forgot Password", headerShown: false }}
-          />
+              <Stack.Screen
+                name="book"
+                options={{ title: "Make a Book", headerBackVisible: true }}
+              />
+            </Stack>
 
-          <Stack.Screen
-            name="verify"
-            options={{ title: "Verify Email", headerShown: false }}
-          />
-
-          <Stack.Screen
-            name="confirm-email"
-            options={{ title: "Confirm Email", headerShown: false }}
-          />
-
-          <Stack.Screen
-            name="password-change"
-            options={{ title: "Change Password", headerShown: false }}
-          />
-
-          <Stack.Screen
-            name="recipe/index"
-            options={{
-              title: "Family Recipes",
-              headerBackVisible: true,
-
-              // Title back in the top left
-              headerLeft: () => (
-                <Text
-                  style={{
-                    color: theme.title,
-                    fontSize: 18,
-                    fontWeight: "600",
-                    marginLeft: 16,
-                  }}
-                >
-                  Family Recipes
-                </Text>
-              ),
-
-              headerTitle: isNarrow
-                ? () => null
-                : () => <RecipeSearchHeader theme={theme} />,
-
-              headerTitleContainerStyle: {
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                alignItems: "center",
-                justifyContent: "center",
-                pointerEvents: "box-none", // lets taps pass through to Home/Add/Profile
-              },
-            }}
-          />
-
-          <Stack.Screen
-            name="profile"
-            options={{ title: "Profile", headerBackVisible: true }}
-          />
-          <Stack.Screen
-            name="recipe/details/[id]"
-            options={{ title: "Recipe Details", headerBackVisible: true }}
-          />
-
-          <Stack.Screen
-            name="recipe/[category]"
-            options={{ title: "Category", headerBackVisible: true }}
-          />
-
-          <Stack.Screen
-            name="addRecipe"
-            options={{ title: "Add Recipe", headerBackVisible: true }}
-          />
-
-          <Stack.Screen
-            name="recipe/edit/[id]"
-            options={{ title: "Edit Recipe", headerBackVisible: true }}
-          />
-
-          <Stack.Screen
-            name="profile/editprofile"
-            options={{ title: "Edit Profile", headerBackVisible: true }}
-          />
-
-          <Stack.Screen
-            name="book"
-            options={{ title: "Make a Book", headerBackVisible: true }}
-          />
-        </Stack>
-
+          </ConfirmProvider>
+        </ToastProvider>
       </ThemedViews>
     </RecipeSearchProvider>
   );

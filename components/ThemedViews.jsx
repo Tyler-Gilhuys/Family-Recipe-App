@@ -32,10 +32,12 @@ const ThemedViews = ({ style, ...props }) => {
 
   const isDark = colorScheme === "dark";
   const card = {
-    background: isDark ? Colors.light.uiBackground : Colors.dark.uiBackground,
-    border: isDark ? Colors.light.navBackground : Colors.dark.navBackground,
-    text: isDark ? Colors.light.text : Colors.dark.text,
-    muted: isDark ? Colors.light.iconColor : Colors.dark.iconColor,
+    background: isDark ? "#2A2620" : "#F7F4EC",
+    border: isDark ? "#3A352C" : "#D9D1B9",
+    text: isDark ? "#F3EEE2" : "#2B2420",
+    muted: isDark ? "#A79E8C" : "#6B6152",
+    accent: isDark ? "#8FAE89" : Colors.primary,
+    danger: isDark ? "#D98571" : Colors.warning,
   };
 
   return (

@@ -1,23 +1,58 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "./ThemedViews";
+import { Colors } from "../constants/Colors";
+import Wordmark from "./Wordmark";
+
+const SERIF = Platform.select({
+    web: "Georgia, 'Iowan Old Style', 'Times New Roman', serif",
+    ios: "Georgia",
+    android: "serif",
+    default: "serif",
+});
 
 export function AuthScreen({ title, subtitle, children }) {
+    const { theme, card } = useAppTheme();
+
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-            {children}
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+            <View style={styles.inner}>
+                <View style={{ alignItems: "center", marginBottom: 20 }}>
+                    <Wordmark size="large" />
+                </View>
+                <Text style={[styles.title, { color: theme.text, fontFamily: SERIF }]}>
+                    {title}
+                </Text>
+                <View style={[styles.rule, { backgroundColor: card.accent }]} />
+                {subtitle ? (
+                    <Text style={[styles.subtitle, { color: card.muted }]}>
+                        {subtitle}
+                    </Text>
+                ) : null}
+                {children}
+            </View>
         </View>
     );
 }
 
 export function AuthInput(props) {
-    return <TextInput style={styles.input} {...props} />;
+    const { theme, card } = useAppTheme();
+
+    return (
+        <TextInput
+            placeholderTextColor={card.muted}
+            style={[
+                styles.input,
+                { backgroundColor: theme.navBackground, borderColor: card.border, color: theme.text },
+            ]}
+            {...props}
+        />
+    );
 }
 
 export function AuthButton({ label, loadingLabel, loading, onPress }) {
     return (
         <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, { backgroundColor: Colors.primary }, loading && styles.buttonDisabled]}
             onPress={onPress}
             disabled={loading}
         >
@@ -29,15 +64,21 @@ export function AuthButton({ label, loadingLabel, loading, onPress }) {
 }
 
 export function AuthLink({ label, onPress }) {
+    const { card } = useAppTheme();
+
     return (
         <TouchableOpacity onPress={onPress} style={styles.link}>
-            <Text style={styles.linkText}>{label}</Text>
+            <Text style={[styles.linkText, { color: card.accent }]}>{label}</Text>
         </TouchableOpacity>
     );
 }
 
 export function AuthError({ children }) {
-    return <Text style={styles.error}>{children}</Text>;
+    const { card } = useAppTheme();
+
+    return (
+        <Text style={[styles.error, { color: card.danger }]}>{children}</Text>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -45,54 +86,48 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         padding: 24,
-        backgroundColor: "#f5f5f5",
+    },
+    inner: {
+        width: "100%",
+        maxWidth: 420,
+        alignSelf: "center",
     },
     title: {
-        fontSize: 28,
-        fontWeight: "bold",
+        fontSize: 30,
+        fontWeight: "700",
         textAlign: "center",
-        marginBottom: 8,
+        marginBottom: 14,
+    },
+    rule: {
+        width: 48,
+        height: 2,
+        borderRadius: 1,
+        alignSelf: "center",
+        marginBottom: 18,
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 15,
+        lineHeight: 22,
         textAlign: "center",
         marginBottom: 28,
-        color: "#555",
     },
     input: {
-        backgroundColor: "#fff",
         borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
+        borderRadius: 10,
         padding: 14,
         marginBottom: 14,
         fontSize: 16,
     },
     button: {
-        backgroundColor: "#276749",
-        padding: 15,
-        borderRadius: 8,
+        minHeight: 50,
+        borderRadius: 10,
         alignItems: "center",
+        justifyContent: "center",
+        marginTop: 4,
     },
-    buttonDisabled: {
-        opacity: 0.6
-    },
-    buttonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "bold"
-    },
-    link: {
-        marginTop: 14,
-        alignItems: "center"
-    },
-    linkText: {
-        color: "#276749",
-        fontWeight: "600"
-    },
-    error: {
-        color: "#b00020",
-        textAlign: "center",
-        marginBottom: 12
-    },
+    buttonDisabled: { opacity: 0.6 },
+    buttonText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+    link: { marginTop: 16, alignItems: "center" },
+    linkText: { fontWeight: "600", fontSize: 15 },
+    error: { textAlign: "center", marginBottom: 12, fontSize: 14 },
 });
